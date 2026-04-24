@@ -36,7 +36,7 @@ const DRIZZLE = 'DRIZZLE_CONNECTION';
 
         try {
           await pool.query('SELECT 1');
-          log.log('PostgreSQL connected successfully');
+          log.log('MySQL connected successfully');
         } catch (e) {
           log.error('Database connection failed', e);
           throw e;
