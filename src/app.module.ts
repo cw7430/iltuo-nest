@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { appConfig, dbConfig, jwtConfig } from './common/config';
+import { DatabaseModule } from './modules/database/database.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { appConfig, dbConfig, jwtConfig } from './common/config';
       envFilePath: ['.env'],
       load: [appConfig, dbConfig, jwtConfig],
     }),
+    DatabaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

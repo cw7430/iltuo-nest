@@ -10,7 +10,7 @@ export const timestampForCreateOnly = {
 export const timestampsForUpdate = {
   ...timestampForCreateOnly,
   updatedAt: timestamp('updated_at')
-    .default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP `)
+    .default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`)
     .notNull(),
 };
 

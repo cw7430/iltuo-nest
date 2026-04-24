@@ -6,6 +6,8 @@ export interface DbConfig {
   USER: string;
   PASSWORD: string;
   NAME: string;
+  CHARSET: string;
+  TIMEZONE: string;
   SSL: boolean;
 }
 
@@ -22,6 +24,8 @@ export const dbConfig = registerAs(
       return process.env.DB_PASSWORD;
     })(),
     NAME: process.env.DB_NAME ?? 'iltuo',
+    CHARSET: 'utf8mb4',
+    TIMEZONE: 'Z',
     SSL: process.env.APP_ENV === 'production' ? true : false,
   }),
 );
