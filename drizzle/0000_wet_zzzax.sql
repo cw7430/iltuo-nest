@@ -78,7 +78,7 @@ ALTER TABLE `native_user` ADD CONSTRAINT `fk_native_user` FOREIGN KEY (`id`) REF
 ALTER TABLE `refresh_token` ADD CONSTRAINT `fk_refresh_token_user` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE `social_user` ADD CONSTRAINT `fk_social_user` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE `social_user` ADD CONSTRAINT `fk_social_provider` FOREIGN KEY (`provider_id`) REFERENCES `social_provider`(`id`) ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-CREATE INDEX `ix_refresh_token_user` ON `refresh_token` (`user_id`);--> statement-breakpoint
-CREATE INDEX `ix_refresh_token_expire` ON `refresh_token` (`expires_at`);--> statement-breakpoint
-CREATE INDEX `ix_user_created` ON `user` (`user_name`,`created_at`);--> statement-breakpoint
-CREATE INDEX `ix_user_deleted` ON `user` (`user_name`,`deleted_at`);
+CREATE INDEX `ix_address_main` ON `address` (`user_id`,`is_valid`,`is_main` desc,`created_at` asc);--> statement-breakpoint
+CREATE INDEX `ix_refresh_token_expire` ON `refresh_token` (`token`,`expires_at`);--> statement-breakpoint
+CREATE INDEX `ix_user_created` ON `user` (`user_name`,`auth_role`,`created_at`);--> statement-breakpoint
+CREATE INDEX `ix_user_deleted` ON `user` (`user_name`,`auth_role`,`deleted_at`);

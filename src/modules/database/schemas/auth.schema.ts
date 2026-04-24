@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql, asc, desc } from 'drizzle-orm';
 import {
   mysqlTable,
   bigint,
@@ -37,8 +37,8 @@ export const user = mysqlTable(
       )
       `,
     ),
-    index('ix_user_created').on(tb.userName, tb.createdAt),
-    index('ix_user_deleted').on(tb.userName, tb.deletedAt),
+    index('ix_user_created').on(tb.userName, tb.authRole, tb.createdAt),
+    index('ix_user_deleted').on(tb.userName, tb.authRole, tb.deletedAt),
     check('ch_auth_type', sql`${tb.authType} IN('NATIVE','SOCIAL','CROSS')`),
     check('ck_auth_role', sql`${tb.authRole} IN('USER','ADMIN','LEFT')`),
   ],
@@ -84,11 +84,6 @@ export const socialUser = mysqlTable(
   },
   (tb) => [
     primaryKey({ name: 'pk_social_user', columns: [tb.socialUserId] }),
-    unique('uq_social_user_provider').on(
-      tb.userId,
-      tb.providerId,
-      tb.providerUserName,
-    ),
     foreignKey({
       name: 'fk_social_user',
       columns: [tb.userId],
@@ -103,6 +98,11 @@ export const socialUser = mysqlTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
+    unique('uq_social_user_provider').on(
+      tb.userId,
+      tb.providerId,
+      tb.providerUserName,
+    ),
   ],
 );
 
@@ -116,9 +116,6 @@ export const refreshToken = mysqlTable(
   },
   (tb) => [
     primaryKey({ name: 'pk_refresh_token', columns: [tb.refreshTokenId] }),
-    index('ix_refresh_token_user').on(tb.userId),
-    unique('uq_active_refresh_token').on(tb.token),
-    index('ix_refresh_token_expire').on(tb.expiresAt),
     foreignKey({
       name: 'fk_refresh_token_user',
       columns: [tb.userId],
@@ -126,6 +123,8 @@ export const refreshToken = mysqlTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
+    unique('uq_active_refresh_token').on(tb.token),
+    index('ix_refresh_token_expire').on(tb.token, tb.expiresAt),
   ],
 );
 
@@ -160,6 +159,12 @@ export const address = mysqlTable(
         END
       )
       `,
+    ),
+    index('ix_address_main').on(
+      tb.userId,
+      tb.isValid,
+      desc(tb.isMain),
+      asc(tb.createdAt),
     ),
   ],
 );

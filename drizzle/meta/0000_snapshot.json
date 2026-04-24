@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "ca09c7f4-1d2d-4bfd-938f-9ba0b3aa9673",
+  "id": "d662d493-dc86-4271-8fe7-7ea5b9e0d6e1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "address": {
@@ -96,6 +96,16 @@
             "\n       (\n        CASE\n          WHEN `is_main` = true THEN `user_id`\n          ELSE NULL\n        END\n      )\n      "
           ],
           "isUnique": true
+        },
+        "ix_address_main": {
+          "name": "ix_address_main",
+          "columns": [
+            "user_id",
+            "is_valid",
+            "`is_main` desc",
+            "`created_at` asc"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -202,16 +212,10 @@
         }
       },
       "indexes": {
-        "ix_refresh_token_user": {
-          "name": "ix_refresh_token_user",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": false
-        },
         "ix_refresh_token_expire": {
           "name": "ix_refresh_token_expire",
           "columns": [
+            "token",
             "expires_at"
           ],
           "isUnique": false
@@ -437,6 +441,7 @@
           "name": "ix_user_created",
           "columns": [
             "user_name",
+            "auth_role",
             "created_at"
           ],
           "isUnique": false
@@ -445,6 +450,7 @@
           "name": "ix_user_deleted",
           "columns": [
             "user_name",
+            "auth_role",
             "deleted_at"
           ],
           "isUnique": false
@@ -484,6 +490,16 @@
       "uq_main_address": {
         "columns": {
           "\n       (\n        CASE\n          WHEN `is_main` = true THEN `user_id`\n          ELSE NULL\n        END\n      )\n      ": {
+            "isExpression": true
+          }
+        }
+      },
+      "ix_address_main": {
+        "columns": {
+          "`is_main` desc": {
+            "isExpression": true
+          },
+          "`created_at` asc": {
             "isExpression": true
           }
         }
