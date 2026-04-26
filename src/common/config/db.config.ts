@@ -6,8 +6,6 @@ export interface DbConfig {
   USER: string;
   PASSWORD: string;
   NAME: string;
-  CHARSET: string;
-  TIMEZONE: string;
   SSL: boolean;
 }
 
@@ -15,8 +13,8 @@ export const dbConfig = registerAs(
   'db',
   (): DbConfig => ({
     HOST: process.env.DB_HOST ?? 'localhost',
-    PORT: Number(process.env.DB_PORT ?? 3306),
-    USER: process.env.DB_USER ?? 'root',
+    PORT: Number(process.env.DB_PORT ?? 5432),
+    USER: process.env.DB_USER ?? 'postgres',
     PASSWORD: (() => {
       if (!process.env.DB_PASSWORD) {
         throw new Error('DB_PASSWORD is not set');
@@ -24,8 +22,6 @@ export const dbConfig = registerAs(
       return process.env.DB_PASSWORD;
     })(),
     NAME: process.env.DB_NAME ?? 'iltuo',
-    CHARSET: 'utf8mb4',
-    TIMEZONE: 'Z',
     SSL: process.env.APP_ENV === 'production' ? true : false,
   }),
 );

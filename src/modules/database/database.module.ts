@@ -1,9 +1,8 @@
 import { Global, Module, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { inspect } from 'util';
-import { drizzle } from 'drizzle-orm/mysql2';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 
 import * as schema from './schemas';
 import type { DbConfig } from '@/common/config';
@@ -18,25 +17,23 @@ const DRIZZLE = 'DRIZZLE_CONNECTION';
       inject: [ConfigService],
       useFactory: async (
         config: ConfigService,
-      ): Promise<MySql2Database<typeof schema>> => {
+      ): Promise<NodePgDatabase<typeof schema>> => {
         const log = new Logger('Drizzle');
 
         const db = config.getOrThrow<DbConfig>('db');
 
-        const pool = mysql.createPool({
+        const pool = new Pool({
           host: db.HOST,
           port: db.PORT,
           user: db.USER,
           password: db.PASSWORD,
           database: db.NAME,
-          charset: db.CHARSET,
-          waitForConnections: true,
-          timezone: db.TIMEZONE,
+          ssl: db.SSL
         });
 
         try {
           await pool.query('SELECT 1');
-          log.log('MySQL connected successfully');
+          log.log('PostgreSQL connected successfully');
         } catch (e) {
           log.error('Database connection failed', e);
           throw e;
@@ -44,7 +41,6 @@ const DRIZZLE = 'DRIZZLE_CONNECTION';
 
         return drizzle(pool, {
           schema,
-          mode: 'default',
           logger: {
             logQuery(query: string, params: unknown[]) {
               log.debug(query);
