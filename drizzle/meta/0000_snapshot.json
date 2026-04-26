@@ -1,60 +1,65 @@
 {
-  "version": "5",
-  "dialect": "mysql",
-  "id": "d662d493-dc86-4271-8fe7-7ea5b9e0d6e1",
+  "id": "59577309-689d-4303-a663-617781aa2f5a",
   "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
   "tables": {
-    "address": {
+    "user.address": {
       "name": "address",
+      "schema": "user",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": true
+          "identity": {
+            "type": "byDefault",
+            "name": "address_id_seq",
+            "schema": "user",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "user_id": {
           "name": "user_id",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "postal_code": {
           "name": "postal_code",
           "type": "varchar(7)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "default_address": {
           "name": "default_address",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "detail_address": {
           "name": "detail_address",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "extra_address": {
           "name": "extra_address",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "is_main": {
           "name": "is_main",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": false
         },
         "is_valid": {
@@ -62,50 +67,73 @@
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": true
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "CURRENT_TIMESTAMP"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          "default": "CURRENT_TIMESTAMP"
         },
         "deleted_at": {
           "name": "deleted_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         }
       },
       "indexes": {
         "uq_main_address": {
           "name": "uq_main_address",
           "columns": [
-            "\n       (\n        CASE\n          WHEN `is_main` = true THEN `user_id`\n          ELSE NULL\n        END\n      )\n      "
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
           ],
-          "isUnique": true
+          "isUnique": true,
+          "where": "\"user\".\"address\".\"is_main\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "ix_address_main": {
           "name": "ix_address_main",
           "columns": [
-            "user_id",
-            "is_valid",
-            "`is_main` desc",
-            "`created_at` asc"
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "is_main",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
           ],
-          "isUnique": false
+          "isUnique": false,
+          "where": "\"user\".\"address\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -113,6 +141,7 @@
           "name": "fk_address_user",
           "tableFrom": "address",
           "tableTo": "user",
+          "schemaTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -132,24 +161,293 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraint": {}
+      "policies": {},
+      "checkConstraints": {
+        "ck_address_deleted_state": {
+          "name": "ck_address_deleted_state",
+          "value": "(\n          (\"user\".\"address\".\"is_valid\" = TRUE AND \"user\".\"address\".\"deleted_at\" IS NULL)\n          OR\n          (\"user\".\"address\".\"is_valid\" = FALSE AND \"user\".\"address\".\"deleted_at\" IS NOT NULL)\n          )"
+        }
+      },
+      "isRLSEnabled": false
     },
-    "native_user": {
-      "name": "native_user",
+    "public.major_category": {
+      "name": "major_category",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "identity": {
+            "type": "byDefault",
+            "name": "major_category_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "sort_key": {
+          "name": "sort_key",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "major_category_name": {
+          "name": "major_category_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_valid": {
+          "name": "is_valid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "uq_active_major_category": {
+          "name": "uq_active_major_category",
+          "columns": [
+            {
+              "expression": "major_category_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"major_category\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_major_category_sort": {
+          "name": "ix_major_category_sort",
+          "columns": [
+            {
+              "expression": "sort_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"major_category\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "pk_major_category": {
+          "name": "pk_major_category",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "uq_major_category_sort_key": {
+          "name": "uq_major_category_sort_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "sort_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "ck_major_category_deleted_state": {
+          "name": "ck_major_category_deleted_state",
+          "value": "(\n          (\"major_category\".\"is_valid\" = TRUE AND \"major_category\".\"deleted_at\" IS NULL)\n          OR\n          (\"major_category\".\"is_valid\" = FALSE AND \"major_category\".\"deleted_at\" IS NOT NULL)\n          )"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.miner_category": {
+      "name": "miner_category",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "miner_category_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "major_category_id": {
+          "name": "major_category_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_key": {
+          "name": "sort_key",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "miner_category_name": {
+          "name": "miner_category_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_valid": {
+          "name": "is_valid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "uq_active_miner_category": {
+          "name": "uq_active_miner_category",
+          "columns": [
+            {
+              "expression": "miner_category_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"miner_category\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_miner_category_sort": {
+          "name": "ix_miner_category_sort",
+          "columns": [
+            {
+              "expression": "sort_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"miner_category\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_category": {
+          "name": "fk_category",
+          "tableFrom": "miner_category",
+          "tableTo": "major_category",
+          "columnsFrom": [
+            "major_category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_miner_category": {
+          "name": "pk_miner_category",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "uq_miner_category_sort_key": {
+          "name": "uq_miner_category_sort_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "major_category_id",
+            "sort_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "ck_miner_category_deleted_state": {
+          "name": "ck_miner_category_deleted_state",
+          "value": "(\n          (\"miner_category\".\"is_valid\" = TRUE AND \"miner_category\".\"deleted_at\" IS NULL)\n          OR\n          (\"miner_category\".\"is_valid\" = FALSE AND \"miner_category\".\"deleted_at\" IS NOT NULL)\n          )"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "user.native_user": {
+      "name": "native_user",
+      "schema": "user",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
         },
         "password_hash": {
           "name": "password_hash",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -158,6 +456,7 @@
           "name": "fk_native_user",
           "tableFrom": "native_user",
           "tableTo": "user",
+          "schemaTo": "user",
           "columnsFrom": [
             "id"
           ],
@@ -177,48 +476,80 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraint": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "refresh_token": {
+    "user.refresh_token": {
       "name": "refresh_token",
+      "schema": "user",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": true
+          "identity": {
+            "type": "byDefault",
+            "name": "refresh_token_id_seq",
+            "schema": "user",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "user_id": {
           "name": "user_id",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "token": {
           "name": "token",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "expires_at": {
           "name": "expires_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {
+        "ix_refresh_token_user": {
+          "name": "ix_refresh_token_user",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "ix_refresh_token_expire": {
           "name": "ix_refresh_token_expire",
           "columns": [
-            "token",
-            "expires_at"
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
           ],
-          "isUnique": false
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -226,6 +557,7 @@
           "name": "fk_refresh_token_user",
           "tableFrom": "refresh_token",
           "tableTo": "user",
+          "schemaTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -247,29 +579,42 @@
       "uniqueConstraints": {
         "uq_active_refresh_token": {
           "name": "uq_active_refresh_token",
+          "nullsNotDistinct": false,
           "columns": [
             "token"
           ]
         }
       },
-      "checkConstraint": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "social_provider": {
+    "user.social_provider": {
       "name": "social_provider",
+      "schema": "user",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": true
+          "identity": {
+            "type": "byDefault",
+            "name": "social_provider_id_seq",
+            "schema": "user",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "provider_name": {
           "name": "provider_name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -285,43 +630,54 @@
       "uniqueConstraints": {
         "uq_social_provider_name": {
           "name": "uq_social_provider_name",
+          "nullsNotDistinct": false,
           "columns": [
             "provider_name"
           ]
         }
       },
-      "checkConstraint": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "social_user": {
+    "user.social_user": {
       "name": "social_user",
+      "schema": "user",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": true
+          "identity": {
+            "type": "byDefault",
+            "name": "social_user_id_seq",
+            "schema": "user",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "user_id": {
           "name": "user_id",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "provider_id": {
           "name": "provider_id",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "provider_user_name": {
           "name": "provider_user_name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -330,6 +686,7 @@
           "name": "fk_social_user",
           "tableFrom": "social_user",
           "tableTo": "user",
+          "schemaTo": "user",
           "columnsFrom": [
             "user_id"
           ],
@@ -343,6 +700,7 @@
           "name": "fk_social_provider",
           "tableFrom": "social_user",
           "tableTo": "social_provider",
+          "schemaTo": "user",
           "columnsFrom": [
             "provider_id"
           ],
@@ -364,6 +722,7 @@
       "uniqueConstraints": {
         "uq_social_user_provider": {
           "name": "uq_social_user_provider",
+          "nullsNotDistinct": false,
           "columns": [
             "user_id",
             "provider_id",
@@ -371,89 +730,140 @@
           ]
         }
       },
-      "checkConstraint": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "user": {
+    "user.user": {
       "name": "user",
+      "schema": "user",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": true
+          "identity": {
+            "type": "byDefault",
+            "name": "user_id_seq",
+            "schema": "user",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "user_name": {
           "name": "user_name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
+        },
+        "real_name": {
+          "name": "real_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
         },
         "auth_type": {
           "name": "auth_type",
-          "type": "varchar(10)",
+          "type": "auth_type",
+          "typeSchema": "user",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "default": "'NATIVE'"
         },
         "auth_role": {
           "name": "auth_role",
-          "type": "varchar(10)",
+          "type": "auth_role",
+          "typeSchema": "user",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "'USER'"
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "CURRENT_TIMESTAMP"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          "default": "CURRENT_TIMESTAMP"
         },
         "deleted_at": {
           "name": "deleted_at",
-          "type": "timestamp",
+          "type": "timestamp (6) with time zone",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         }
       },
       "indexes": {
-        "uq_active_user_name": {
-          "name": "uq_active_user_name",
+        "uq_user_name": {
+          "name": "uq_user_name",
           "columns": [
-            "\n      (\n        CASE\n          WHEN (`auth_type` <> 'SOCIAL') AND (`auth_role` <> 'LEFT') THEN `user_name`\n          ELSE NULL\n        END\n      )\n      "
+            {
+              "expression": "user_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
           ],
-          "isUnique": true
+          "isUnique": true,
+          "where": "\"user\".\"user\".\"auth_type\" <> 'SOCIAL' AND \"user\".\"user\".\"auth_role\" <> 'LEFT'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
-        "ix_user_created": {
-          "name": "ix_user_created",
+        "ix_active_user_created_at": {
+          "name": "ix_active_user_created_at",
           "columns": [
-            "user_name",
-            "auth_role",
-            "created_at"
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
           ],
-          "isUnique": false
+          "isUnique": false,
+          "where": "\"user\".\"user\".\"auth_role\" <> 'LEFT'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
-        "ix_user_deleted": {
-          "name": "ix_user_deleted",
+        "ix_delete_user_deleted_at": {
+          "name": "ix_delete_user_deleted_at",
           "columns": [
-            "user_name",
-            "auth_role",
-            "deleted_at"
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
           ],
-          "isUnique": false
+          "isUnique": false,
+          "where": "\"user\".\"user\".\"auth_role\" = 'LEFT'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -466,51 +876,46 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraint": {
-        "ch_auth_type": {
-          "name": "ch_auth_type",
-          "value": "`user`.`auth_type` IN('NATIVE','SOCIAL','CROSS')"
-        },
-        "ck_auth_role": {
-          "name": "ck_auth_role",
-          "value": "`user`.`auth_role` IN('USER','ADMIN','LEFT')"
+      "policies": {},
+      "checkConstraints": {
+        "ck_user_deleted_state": {
+          "name": "ck_user_deleted_state",
+          "value": "(\n          (\"user\".\"user\".\"auth_role\" <> 'LEFT' AND \"user\".\"user\".\"deleted_at\" IS NULL)\n          OR\n          (\"user\".\"user\".\"auth_role\" = 'LEFT' AND \"user\".\"user\".\"deleted_at\" IS NOT NULL)\n          )"
         }
-      }
+      },
+      "isRLSEnabled": false
     }
   },
+  "enums": {
+    "user.auth_role": {
+      "name": "auth_role",
+      "schema": "user",
+      "values": [
+        "USER",
+        "ADMIN",
+        "LEFT"
+      ]
+    },
+    "user.auth_type": {
+      "name": "auth_type",
+      "schema": "user",
+      "values": [
+        "NATIVE",
+        "SOCIAL",
+        "CROSS"
+      ]
+    }
+  },
+  "schemas": {
+    "user": "user"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
   "views": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "internal": {
-    "tables": {},
-    "indexes": {
-      "uq_main_address": {
-        "columns": {
-          "\n       (\n        CASE\n          WHEN `is_main` = true THEN `user_id`\n          ELSE NULL\n        END\n      )\n      ": {
-            "isExpression": true
-          }
-        }
-      },
-      "ix_address_main": {
-        "columns": {
-          "`is_main` desc": {
-            "isExpression": true
-          },
-          "`created_at` asc": {
-            "isExpression": true
-          }
-        }
-      },
-      "uq_active_user_name": {
-        "columns": {
-          "\n      (\n        CASE\n          WHEN (`auth_type` <> 'SOCIAL') AND (`auth_role` <> 'LEFT') THEN `user_name`\n          ELSE NULL\n        END\n      )\n      ": {
-            "isExpression": true
-          }
-        }
-      }
-    }
+    "tables": {}
   }
 }

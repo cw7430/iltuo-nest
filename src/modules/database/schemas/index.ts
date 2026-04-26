@@ -1,3 +1,4 @@
+export { majorCategory, minerCategory } from './public.schema';
 export {
   user,
   nativeUser,
@@ -5,4 +6,4 @@ export {
   socialUser,
   refreshToken,
   address,
-} from './auth.schema';
+} from './user.schema';

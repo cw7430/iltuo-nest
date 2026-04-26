@@ -53,7 +53,7 @@ export class GlobalExceptionHandler {
   }
 
   handleGeneralException(exception: unknown): ErrorResponseDto {
-    if (this.isMySqlError(exception)) {
+    if (this.isPostgresError(exception)) {
       this.log.error(
         `Database Error: [${exception.code}] ${exception.message}`,
         exception instanceof Error ? exception.stack : undefined,
@@ -65,20 +65,17 @@ export class GlobalExceptionHandler {
     return ErrorResponseDto.from(ResponseCode.INTERNAL_SERVER_ERROR);
   }
 
-  private isMySqlError(
+  private isPostgresError(
     exception: unknown,
-  ): exception is {
-    code: string | number;
-    message: string;
-    errno?: number;
-    sqlState?: string;
-  } {
+  ): exception is { code: string; message: string } {
     const ex = exception as Record<string, unknown>;
 
     return (
       !!ex &&
-      (typeof ex.errno === 'number' || typeof ex.code === 'string') &&
-      typeof ex.message === 'string'
+      typeof ex.code === 'string' &&
+      typeof ex.message === 'string' &&
+      ex.code.length === 5 &&
+      /^[0-9A-Z]{5}$/.test(ex.code)
     );
   }
 }
