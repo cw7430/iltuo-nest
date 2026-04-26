@@ -67,10 +67,11 @@ export const minerCategory = pgTable(
       name: 'fk_category',
       columns: [tb.majorCategoryId],
       foreignColumns: [majorCategory.majorCategoryId],
-    }),
+    }).onUpdate('cascade')
+      .onDelete('cascade'),
     unique('uq_miner_category_sort_key').on(tb.majorCategoryId, tb.sortKey),
     uniqueIndex('uq_active_miner_category')
-      .on(tb.minerCategoryName)
+      .on(tb.majorCategoryId, tb.minerCategoryName)
       .where(sql`${tb.isValid} = TRUE`),
     index('ix_miner_category_sort')
       .on(tb.sortKey.asc())
