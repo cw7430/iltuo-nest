@@ -70,11 +70,11 @@ export const option = productSchema.table(
 export const detailOption = productSchema.table(
   'detail_option',
   {
-    optionDetailId: bigint('id', { mode: 'bigint' })
+    detailOptionId: bigint('id', { mode: 'bigint' })
       .notNull()
       .generatedByDefaultAsIdentity(),
     optionId: bigint('option_id', { mode: 'bigint' }).notNull(),
-    optionDetailName: varchar('option_detail_name', {
+    detailOptionName: varchar('detail_option_name', {
       length: 255,
     }).notNull(),
     optionValue: bigint('option_value', { mode: 'bigint' }).notNull(),
@@ -82,7 +82,7 @@ export const detailOption = productSchema.table(
     ...timestampsForSoftDelete,
   },
   (tb) => [
-    primaryKey({ name: 'pk_detail_option', columns: [tb.optionDetailId] }),
+    primaryKey({ name: 'pk_detail_option', columns: [tb.detailOptionId] }),
     foreignKey({
       name: 'fk_detail_option',
       columns: [tb.optionId],
@@ -94,7 +94,7 @@ export const detailOption = productSchema.table(
       .on(tb.optionId, tb.optionValue.desc())
       .where(sql`${tb.isValid} = TRUE`),
     uniqueIndex('uq_active_detail_option')
-      .on(tb.optionId, tb.optionDetailName)
+      .on(tb.optionId, tb.detailOptionName)
       .where(sql`${tb.isValid} = TRUE`),
     check(
       'ck_option_deleted_state',

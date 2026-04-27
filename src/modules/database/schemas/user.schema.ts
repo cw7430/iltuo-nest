@@ -91,10 +91,26 @@ export const socialProvider = userSchema.table(
       .notNull()
       .generatedByDefaultAsIdentity(),
     providerName: varchar('provider_name', { length: 255 }).notNull(),
+    isValid: boolean('is_valid').notNull().default(true),
+    ...timestampsForSoftDelete,
   },
   (tb) => [
     primaryKey({ name: 'pk_social_provider', columns: [tb.providerId] }),
     unique('uq_social_provider_name').on(tb.providerName),
+    index('ix_active_social_provider_created_at')
+      .on(tb.createdAt.desc())
+      .where(sql`${tb.isValid} = TRUE`),
+    index('ix_delete_social_provider_deleted_at')
+      .on(tb.deletedAt.desc())
+      .where(sql`${tb.isValid} = FALSE`),
+    check(
+      'ck_social_provider_state',
+      sql`(
+          (${tb.isValid} = TRUE AND ${tb.deletedAt} IS NULL)
+          OR
+          (${tb.isValid} = FALSE AND ${tb.deletedAt} IS NOT NULL)
+          )`,
+    ),
   ],
 );
 
