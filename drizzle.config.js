@@ -5,7 +5,7 @@ dotenv.config();
 
 module.exports = defineConfig({
   dialect: 'postgresql',
-  schema: './src/modules/database/schemas/*.ts',
+  schema: './src/modules/database/schemas/*.schema.ts',
   out: './drizzle',
   dbCredentials: {
     host: process.env.DB_HOST ?? 'localhost',

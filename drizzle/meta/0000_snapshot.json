@@ -1,12 +1,12 @@
 {
-  "id": "f8d9343b-f3c9-4577-9160-be9e31ba32c2",
+  "id": "53c14f28-0116-4ba6-baab-11036eb40406",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "user.address": {
-      "name": "address",
-      "schema": "user",
+    "product.detail_option": {
+      "name": "detail_option",
+      "schema": "product",
       "columns": {
         "id": {
           "name": "id",
@@ -15,8 +15,8 @@
           "notNull": true,
           "identity": {
             "type": "byDefault",
-            "name": "address_id_seq",
-            "schema": "user",
+            "name": "detail_option_id_seq",
+            "schema": "product",
             "increment": "1",
             "startWith": "1",
             "minValue": "1",
@@ -25,38 +25,340 @@
             "cycle": false
           }
         },
-        "user_id": {
-          "name": "user_id",
+        "option_id": {
+          "name": "option_id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
-        "postal_code": {
-          "name": "postal_code",
-          "type": "varchar(7)",
+        "option_detail_name": {
+          "name": "option_detail_name",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "default_address": {
-          "name": "default_address",
+        "option_value": {
+          "name": "option_value",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_valid": {
+          "name": "is_valid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "uq_detail_option_value": {
+          "name": "uq_detail_option_value",
+          "columns": [
+            {
+              "expression": "option_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "option_value",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"product\".\"detail_option\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uq_active_detail_option": {
+          "name": "uq_active_detail_option",
+          "columns": [
+            {
+              "expression": "option_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "option_detail_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"product\".\"detail_option\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_detail_option": {
+          "name": "fk_detail_option",
+          "tableFrom": "detail_option",
+          "tableTo": "option",
+          "schemaTo": "product",
+          "columnsFrom": [
+            "option_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_detail_option": {
+          "name": "pk_detail_option",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "ck_option_deleted_state": {
+          "name": "ck_option_deleted_state",
+          "value": "(\n          (\"product\".\"detail_option\".\"is_valid\" = TRUE AND \"product\".\"detail_option\".\"deleted_at\" IS NULL)\n          OR\n          (\"product\".\"detail_option\".\"is_valid\" = FALSE AND \"product\".\"detail_option\".\"deleted_at\" IS NOT NULL)\n          )"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "product.option": {
+      "name": "option",
+      "schema": "product",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "option_id_seq",
+            "schema": "product",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "major_category_id": {
+          "name": "major_category_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_key": {
+          "name": "sort_key",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "option_name": {
+          "name": "option_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_valid": {
+          "name": "is_valid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "uq_active_option": {
+          "name": "uq_active_option",
+          "columns": [
+            {
+              "expression": "major_category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "option_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"product\".\"option\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_option_sort": {
+          "name": "ix_option_sort",
+          "columns": [
+            {
+              "expression": "major_category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sort_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"product\".\"option\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_option_category": {
+          "name": "fk_option_category",
+          "tableFrom": "option",
+          "tableTo": "major_category",
+          "columnsFrom": [
+            "major_category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_option": {
+          "name": "pk_option",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "uq_option_sort_key": {
+          "name": "uq_option_sort_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "major_category_id",
+            "sort_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "ck_option_deleted_state": {
+          "name": "ck_option_deleted_state",
+          "value": "(\n          (\"product\".\"option\".\"is_valid\" = TRUE AND \"product\".\"option\".\"deleted_at\" IS NULL)\n          OR\n          (\"product\".\"option\".\"is_valid\" = FALSE AND \"product\".\"option\".\"deleted_at\" IS NOT NULL)\n          )"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "product.product": {
+      "name": "product",
+      "schema": "product",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "product_id_seq",
+            "schema": "product",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "miner_category_id": {
+          "name": "miner_category_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_name": {
+          "name": "product_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "productComments": {
+          "name": "productComments",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "detail_address": {
-          "name": "detail_address",
-          "type": "text",
+        "price": {
+          "name": "price",
+          "type": "bigint",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "extra_address": {
-          "name": "extra_address",
-          "type": "text",
+        "discounted_rate": {
+          "name": "discounted_rate",
+          "type": "bigint",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "is_main": {
-          "name": "is_main",
+        "is_recommended": {
+          "name": "is_recommended",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -91,59 +393,48 @@
         }
       },
       "indexes": {
-        "uq_main_address": {
-          "name": "uq_main_address",
+        "ix_active_product": {
+          "name": "ix_active_product",
           "columns": [
             {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"user\".\"address\".\"is_main\" = TRUE",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ix_address_main": {
-          "name": "ix_address_main",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "is_main",
+              "expression": "is_recommended",
               "isExpression": false,
               "asc": false,
               "nulls": "last"
             },
             {
+              "expression": "miner_category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
               "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "price",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "where": "\"user\".\"address\".\"is_valid\" = TRUE",
+          "where": "\"product\".\"product\".\"is_valid\" = TRUE",
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
       "foreignKeys": {
-        "fk_address_user": {
-          "name": "fk_address_user",
-          "tableFrom": "address",
-          "tableTo": "user",
-          "schemaTo": "user",
+        "fk_product_category": {
+          "name": "fk_product_category",
+          "tableFrom": "product",
+          "tableTo": "miner_category",
           "columnsFrom": [
-            "user_id"
+            "miner_category_id"
           ],
           "columnsTo": [
             "id"
@@ -153,8 +444,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "pk_address": {
-          "name": "pk_address",
+        "pk_product": {
+          "name": "pk_product",
           "columns": [
             "id"
           ]
@@ -163,11 +454,91 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "ck_address_deleted_state": {
-          "name": "ck_address_deleted_state",
-          "value": "(\n          (\"user\".\"address\".\"is_valid\" = TRUE AND \"user\".\"address\".\"deleted_at\" IS NULL)\n          OR\n          (\"user\".\"address\".\"is_valid\" = FALSE AND \"user\".\"address\".\"deleted_at\" IS NOT NULL)\n          )"
+        "ck_product_deleted_state": {
+          "name": "ck_product_deleted_state",
+          "value": "(\n          (\"product\".\"product\".\"is_valid\" = TRUE AND \"product\".\"product\".\"deleted_at\" IS NULL)\n          OR\n          (\"product\".\"product\".\"is_valid\" = FALSE AND \"product\".\"product\".\"deleted_at\" IS NOT NULL)\n          )"
         }
       },
+      "isRLSEnabled": false
+    },
+    "product.product_image": {
+      "name": "product_image",
+      "schema": "product",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "original_name": {
+          "name": "original_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_size": {
+          "name": "file_size",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fk_product_image": {
+          "name": "fk_product_image",
+          "tableFrom": "product_image",
+          "tableTo": "product",
+          "schemaTo": "product",
+          "columnsFrom": [
+            "id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_product_image": {
+          "name": "pk_product_image",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "uq_file_name": {
+          "name": "uq_file_name",
+          "nullsNotDistinct": false,
+          "columns": [
+            "file_name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.major_category": {
@@ -435,6 +806,172 @@
         "ck_miner_category_deleted_state": {
           "name": "ck_miner_category_deleted_state",
           "value": "(\n          (\"miner_category\".\"is_valid\" = TRUE AND \"miner_category\".\"deleted_at\" IS NULL)\n          OR\n          (\"miner_category\".\"is_valid\" = FALSE AND \"miner_category\".\"deleted_at\" IS NOT NULL)\n          )"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "user.address": {
+      "name": "address",
+      "schema": "user",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "address_id_seq",
+            "schema": "user",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "default_address": {
+          "name": "default_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detail_address": {
+          "name": "detail_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "extra_address": {
+          "name": "extra_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_main": {
+          "name": "is_main",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_valid": {
+          "name": "is_valid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp (6) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "uq_main_address": {
+          "name": "uq_main_address",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"user\".\"address\".\"is_main\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_address_main": {
+          "name": "ix_address_main",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "is_main",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"user\".\"address\".\"is_valid\" = TRUE",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fk_address_user": {
+          "name": "fk_address_user",
+          "tableFrom": "address",
+          "tableTo": "user",
+          "schemaTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pk_address": {
+          "name": "pk_address",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "ck_address_deleted_state": {
+          "name": "ck_address_deleted_state",
+          "value": "(\n          (\"user\".\"address\".\"is_valid\" = TRUE AND \"user\".\"address\".\"deleted_at\" IS NULL)\n          OR\n          (\"user\".\"address\".\"is_valid\" = FALSE AND \"user\".\"address\".\"deleted_at\" IS NOT NULL)\n          )"
         }
       },
       "isRLSEnabled": false
@@ -887,308 +1424,6 @@
         "ck_user_deleted_state": {
           "name": "ck_user_deleted_state",
           "value": "(\n          (\"user\".\"user\".\"auth_role\" <> 'LEFT' AND \"user\".\"user\".\"deleted_at\" IS NULL)\n          OR\n          (\"user\".\"user\".\"auth_role\" = 'LEFT' AND \"user\".\"user\".\"deleted_at\" IS NOT NULL)\n          )"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "product.detail_option": {
-      "name": "detail_option",
-      "schema": "product",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "detail_option_id_seq",
-            "schema": "product",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "9223372036854775807",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "option_id": {
-          "name": "option_id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "option_detail_name": {
-          "name": "option_detail_name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "option_value": {
-          "name": "option_value",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_valid": {
-          "name": "is_valid",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (6) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (6) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp (6) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "uq_detail_option_value": {
-          "name": "uq_detail_option_value",
-          "columns": [
-            {
-              "expression": "option_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "option_value",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"product\".\"detail_option\".\"is_valid\" = TRUE",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "uq_active_detail_option": {
-          "name": "uq_active_detail_option",
-          "columns": [
-            {
-              "expression": "option_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "option_detail_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"product\".\"detail_option\".\"is_valid\" = TRUE",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "fk_detail_option": {
-          "name": "fk_detail_option",
-          "tableFrom": "detail_option",
-          "tableTo": "option",
-          "schemaTo": "product",
-          "columnsFrom": [
-            "option_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {
-        "pk_detail_option": {
-          "name": "pk_detail_option",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "ck_option_deleted_state": {
-          "name": "ck_option_deleted_state",
-          "value": "(\n          (\"product\".\"detail_option\".\"is_valid\" = TRUE AND \"product\".\"detail_option\".\"deleted_at\" IS NULL)\n          OR\n          (\"product\".\"detail_option\".\"is_valid\" = FALSE AND \"product\".\"detail_option\".\"deleted_at\" IS NOT NULL)\n          )"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "product.option": {
-      "name": "option",
-      "schema": "product",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "option_id_seq",
-            "schema": "product",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "9223372036854775807",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "major_category_id": {
-          "name": "major_category_id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sort_key": {
-          "name": "sort_key",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "option_name": {
-          "name": "option_name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_valid": {
-          "name": "is_valid",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (6) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (6) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp (6) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "uq_active_option": {
-          "name": "uq_active_option",
-          "columns": [
-            {
-              "expression": "major_category_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "option_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"product\".\"option\".\"is_valid\" = TRUE",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ix_option_sort": {
-          "name": "ix_option_sort",
-          "columns": [
-            {
-              "expression": "major_category_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "sort_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"product\".\"option\".\"is_valid\" = TRUE",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "fk_option_category": {
-          "name": "fk_option_category",
-          "tableFrom": "option",
-          "tableTo": "major_category",
-          "columnsFrom": [
-            "major_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {
-        "pk_option": {
-          "name": "pk_option",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "uq_option_sort_key": {
-          "name": "uq_option_sort_key",
-          "nullsNotDistinct": false,
-          "columns": [
-            "major_category_id",
-            "sort_key"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "ck_option_deleted_state": {
-          "name": "ck_option_deleted_state",
-          "value": "(\n          (\"product\".\"option\".\"is_valid\" = TRUE AND \"product\".\"option\".\"deleted_at\" IS NULL)\n          OR\n          (\"product\".\"option\".\"is_valid\" = FALSE AND \"product\".\"option\".\"deleted_at\" IS NOT NULL)\n          )"
         }
       },
       "isRLSEnabled": false
