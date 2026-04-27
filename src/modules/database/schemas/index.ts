@@ -7,4 +7,4 @@ export {
   refreshToken,
   address,
 } from './user.schema';
-export { option, detailOption, product } from './product.schema';
+export { option, detailOption, product, productImage } from './product.schema';
