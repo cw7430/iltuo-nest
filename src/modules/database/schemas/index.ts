@@ -8,3 +8,12 @@ export {
   address,
 } from './user.schema';
 export { option, detailOption, product, productImage } from './product.schema';
+export {
+  cart,
+  cartOption,
+  paymentMethod,
+  payment,
+  order,
+  orderOption,
+  delivery,
+} from './order.schema';
