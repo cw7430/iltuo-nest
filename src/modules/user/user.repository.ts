@@ -6,7 +6,7 @@ import { type DbOrTx } from '@/modules/database/types';
 
 @Injectable()
 export class UserRepository {
-  async findNativeSignInInfoByUserName(conn: DbOrTx, userName: string) {
+  async findNativeLoginInfoByUserName(conn: DbOrTx, userName: string) {
     const { user, nativeUser } = schema;
     const { userId, authType, authRole } = user;
     const { passwordHash } = nativeUser;
@@ -31,6 +31,18 @@ export class UserRepository {
     return result[0] ?? undefined;
   }
 
+  async findRefreshInfoByUserId(conn: DbOrTx, userId: bigint) {
+    const { user } = schema;
+    const { authType, authRole } = user;
+    const result = await conn
+      .select({ authType, authRole })
+      .from(user)
+      .where(and(eq(user.userId, userId), ne(user.authRole, 'LEFT')))
+      .limit(1);
+
+    return result[0] ?? undefined;
+  }
+
   async existsByUserName(conn: DbOrTx, userName: string) {
     const { user } = schema;
 
@@ -49,6 +61,20 @@ export class UserRepository {
     return !!row;
   }
 
+  async existsByUserIdAndToken(conn: DbOrTx, userId: bigint, token: string) {
+    const { refreshToken } = schema;
+
+    const [row] = await conn
+      .select({ exists: sql<boolean>`true` })
+      .from(refreshToken)
+      .where(
+        and(eq(refreshToken.userId, userId), eq(refreshToken.token, token)),
+      )
+      .limit(1);
+
+    return !!row;
+  }
+
   async createRefreshToken(
     conn: DbOrTx,
     userId: bigint,
@@ -61,5 +87,11 @@ export class UserRepository {
       .insert(refreshToken)
       .values({ userId, token, expiresAt })
       .returning({ refreshTokenId: refreshToken.refreshTokenId });
+  }
+
+  async deleteRefreshTokenByToken(conn: DbOrTx, token: string) {
+    const { refreshToken } = schema;
+
+    return conn.delete(refreshToken).where(eq(refreshToken.token, token));
   }
 }
