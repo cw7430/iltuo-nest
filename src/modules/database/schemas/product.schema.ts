@@ -37,6 +37,7 @@ export const option = productSchema.table(
     optionName: varchar('option_name', {
       length: 255,
     }).notNull(),
+    optionType: optionTypeEnum().notNull(),
     isValid: boolean('is_valid').notNull().default(true),
     ...timestampsForSoftDelete,
   },

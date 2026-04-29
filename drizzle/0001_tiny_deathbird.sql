@@ -1,0 +1,1 @@
+ALTER TABLE "product"."option" ADD COLUMN "optionType" "product"."option_type" NOT NULL;
