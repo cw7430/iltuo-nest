@@ -36,6 +36,13 @@ async function bootstrap() {
 
   const appConfigValue = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
 
+  app.enableCors({
+    origin: appConfigValue.CORS_ORIGINS,
+    credentials: true,
+    exposedHeaders: ['Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+  });
+
   if (appConfigValue.APP_ENV !== 'production') {
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('swagger-ui', app, document);

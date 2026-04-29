@@ -5,6 +5,7 @@ declare global {
     interface ProcessEnv {
       readonly APP_ENV: 'local' | 'development' | 'production';
       readonly PORT: string;
+      readonly CORS_ORIGINS: string;
       readonly DB_HOST: string;
       readonly DB_PORT: string;
       readonly DB_USER: string;
