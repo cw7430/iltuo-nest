@@ -6,6 +6,9 @@ import {
 import { ValidationPipe } from '@nestjs/common';
 import { type ConfigType } from '@nestjs/config';
 import { SwaggerModule } from '@nestjs/swagger';
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import * as path from 'path';
 
 import { AppModule } from './app.module';
 import { appConfig, swaggerConfig } from './common/config';
@@ -33,6 +36,17 @@ async function bootstrap() {
       },
     }),
   );
+
+  await app.register(multipart, {
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB
+    },
+  });
+
+  await app.register(fastifyStatic, {
+    root: path.join(process.cwd(), 'uploads'),
+    prefix: 'api/v1/files/',
+  });
 
   const appConfigValue = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
 
