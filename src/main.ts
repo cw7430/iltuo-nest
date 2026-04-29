@@ -45,7 +45,7 @@ async function bootstrap() {
 
   await app.register(fastifyStatic, {
     root: path.join(process.cwd(), 'uploads'),
-    prefix: 'api/v1/files/',
+    prefix: '/api/v1/files/',
   });
 
   const appConfigValue = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);

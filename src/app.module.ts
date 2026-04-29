@@ -7,7 +7,7 @@ import { appConfig, dbConfig, jwtConfig } from './common/config';
 import { DatabaseModule } from './modules/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-import { FileModule } from './modules/file/file.module';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { FileModule } from './modules/file/file.module';
     DatabaseModule,
     AuthModule,
     UserModule,
-    FileModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],
