@@ -99,4 +99,20 @@ export class ProductRepository {
 
     return result ?? undefined;
   }
+
+  async createProductImage(
+    conn: DbOrTx,
+    productImageId: bigint,
+    fileName: string,
+    originalName: string,
+    mimeType: string,
+    fileSize: bigint,
+  ) {
+    const { productImage } = schema;
+
+    return conn
+      .insert(productImage)
+      .values({ productImageId, fileName, originalName, mimeType, fileSize })
+      .returning({ productImageId: productImage.productImageId });
+  }
 }
