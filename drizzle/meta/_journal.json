@@ -8,6 +8,13 @@
       "when": 1777277058260,
       "tag": "0000_modern_blue_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777423894429,
+      "tag": "0001_tiny_deathbird",
+      "breakpoints": true
     }
   ]
 }
