@@ -1,0 +1,1 @@
+ALTER TABLE "product"."product" ALTER COLUMN "productComments" DROP NOT NULL;

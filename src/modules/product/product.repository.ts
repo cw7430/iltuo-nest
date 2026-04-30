@@ -6,6 +6,53 @@ import { type DbOrTx } from '@/modules/database/types';
 
 @Injectable()
 export class ProductRepository {
+  private findAllProducts(conn: DbOrTx) {
+    const { product, productImage, minerCategory, majorCategory } = schema;
+    const {
+      productId,
+      minerCategoryId,
+      productName,
+      productComments,
+      price,
+      discountedRate,
+      isRecommended,
+      isValid,
+      createdAt,
+      updatedAt,
+      deletedAt,
+    } = product;
+    const { productImageId, fileName } = productImage;
+
+    return conn
+      .select({
+        productId,
+        minerCategoryId,
+        productName,
+        productComments,
+        fileName,
+        price,
+        discountedRate,
+        isRecommended,
+        isValid,
+        createdAt,
+        updatedAt,
+        deletedAt,
+      })
+      .from(product)
+      .innerJoin(productImage, eq(productId, productImageId))
+      .innerJoin(
+        minerCategory,
+        eq(minerCategoryId, minerCategory.majorCategoryId),
+      )
+      .innerJoin(
+        majorCategory,
+        eq(
+          majorCategory,
+          eq(minerCategory.majorCategoryId, majorCategory.majorCategoryId),
+        ),
+      );
+  }
+
   async findAllMajorCategories(conn: DbOrTx) {
     const { majorCategory } = schema;
     const result = await conn
@@ -53,61 +100,22 @@ export class ProductRepository {
   }
 
   async findProductsByRecommended(conn: DbOrTx) {
-    const { product, productImage, minerCategory, majorCategory } = schema;
-    const {
-      productId,
-      minerCategoryId,
-      productName,
-      productComments,
-      price,
-      discountedRate,
-      isRecommended,
-      isValid,
-      createdAt,
-      updatedAt,
-      deletedAt,
-    } = product;
-    const { productImageId, fileName } = productImage;
+    const { product, majorCategory } = schema;
 
-    const result = await conn
-      .select({
-        productId,
-        minerCategoryId,
-        productName,
-        productComments,
-        fileName,
-        price,
-        discountedRate,
-        isRecommended,
-        isValid,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      })
-      .from(product)
+    const query = this.findAllProducts(conn);
+
+    const result = await query
       .where(and(eq(product.isValid, true), eq(product.isRecommended, true)))
-      .innerJoin(productImage, eq(productId, productImageId))
-      .innerJoin(
-        minerCategory,
-        eq(minerCategoryId, minerCategory.majorCategoryId),
-      )
-      .innerJoin(
-        majorCategory,
-        eq(
-          majorCategory,
-          eq(minerCategory.majorCategoryId, majorCategory.majorCategoryId),
-        ),
-      )
       .orderBy(majorCategory.sortKey);
 
     return result ?? undefined;
   }
-
+  
   async createProduct(
     conn: DbOrTx,
     minerCategoryId: bigint,
     productName: string,
-    productComments: string,
+    productComments: string | null,
     price: bigint,
     discountedRate: bigint,
   ) {
