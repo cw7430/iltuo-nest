@@ -1,10 +1,17 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { type FastifyRequest } from 'fastify';
 
 import { ProductService } from './product.service';
 import { ApiSuccessResponse } from '@/common/decorator';
 import { SuccessResponseDto } from '@/common/api/response';
-import { CategoryResponseDto } from './dto';
+import {
+  CategoryResponseDto,
+  CreateProductRequestDto,
+  ProductImageRequestDto,
+} from './dto';
+import { AuthGuard } from '@/modules/auth/guard/auth.guard';
+import { CurrentUser } from '@/modules/auth/decorator';
 
 @Controller('/api/v1/product')
 @ApiTags('product')
@@ -15,5 +22,28 @@ export class ProductController {
   @ApiSuccessResponse(CategoryResponseDto)
   async categories() {
     return SuccessResponseDto.okWith(await this.productService.categories());
+  }
+
+  @Post('/product')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiSuccessResponse()
+  async createproduct(
+    @CurrentUser('userId') userId: bigint,
+    @Req() req: FastifyRequest,
+    @Body() requestDto: CreateProductRequestDto,
+  ) {
+    await this.productService.createproduct(userId, req, requestDto);
+    return SuccessResponseDto.ok();
+  }
+
+  @Post('/upload')
+  @ApiSuccessResponse()
+  async productImage(
+    @Req() req: FastifyRequest,
+    @Body() reqDto: ProductImageRequestDto,
+  ) {
+    await this.productService.productImage(req, reqDto);
+    return SuccessResponseDto.ok();
   }
 }
