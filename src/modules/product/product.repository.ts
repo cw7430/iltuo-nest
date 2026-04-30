@@ -53,7 +53,7 @@ export class ProductRepository {
   }
 
   async findProductsByRecommended(conn: DbOrTx) {
-    const { product, minerCategory, majorCategory } = schema;
+    const { product, productImage, minerCategory, majorCategory } = schema;
     const {
       productId,
       minerCategoryId,
@@ -67,6 +67,7 @@ export class ProductRepository {
       updatedAt,
       deletedAt,
     } = product;
+    const { productImageId, fileName } = productImage;
 
     const result = await conn
       .select({
@@ -74,6 +75,7 @@ export class ProductRepository {
         minerCategoryId,
         productName,
         productComments,
+        fileName,
         price,
         discountedRate,
         isRecommended,
@@ -84,6 +86,7 @@ export class ProductRepository {
       })
       .from(product)
       .where(and(eq(product.isValid, true), eq(product.isRecommended, true)))
+      .innerJoin(productImage, eq(productId, productImageId))
       .innerJoin(
         minerCategory,
         eq(minerCategoryId, minerCategory.majorCategoryId),
@@ -98,6 +101,28 @@ export class ProductRepository {
       .orderBy(majorCategory.sortKey);
 
     return result ?? undefined;
+  }
+
+  async createProduct(
+    conn: DbOrTx,
+    minerCategoryId: bigint,
+    productName: string,
+    productComments: string,
+    price: bigint,
+    discountedRate: bigint,
+  ) {
+    const { product } = schema;
+
+    return conn
+      .insert(product)
+      .values({
+        minerCategoryId,
+        productName,
+        productComments,
+        price,
+        discountedRate,
+      })
+      .returning({ productId: product.productId });
   }
 
   async createProductImage(
