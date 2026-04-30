@@ -118,7 +118,7 @@ export const product = productSchema.table(
     productName: varchar('product_name', {
       length: 255,
     }).notNull(),
-    productComments: text().notNull(),
+    productComments: text('product_comments'),
     price: bigint('price', { mode: 'bigint' }).notNull(),
     discountedRate: bigint('discounted_rate', { mode: 'bigint' }).notNull(),
     isRecommended: boolean('is_recommended').notNull().default(false),

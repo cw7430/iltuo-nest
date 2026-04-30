@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { type FastifyRequest } from 'fastify';
 
 import { ProductService } from './product.service';
@@ -8,7 +8,6 @@ import { SuccessResponseDto } from '@/common/api/response';
 import {
   CategoryResponseDto,
   CreateProductRequestDto,
-  ProductImageRequestDto,
 } from './dto';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 import { CurrentUser } from '@/modules/auth/decorator';
@@ -39,11 +38,25 @@ export class ProductController {
 
   @Post('/upload')
   @ApiSuccessResponse()
-  async productImage(
-    @Req() req: FastifyRequest,
-    @Body() reqDto: ProductImageRequestDto,
-  ) {
-    await this.productService.productImage(req, reqDto);
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        productImageId: {
+          type: 'string',
+          description: '일련번호',
+          example: '1',
+        },
+      },
+    },
+  })
+  async productImage(@Req() req: FastifyRequest) {
+    await this.productService.productImage(req);
     return SuccessResponseDto.ok();
   }
 }

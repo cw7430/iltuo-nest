@@ -1,0 +1,1 @@
+ALTER TABLE "product"."product" RENAME COLUMN "productComments" TO "product_comments";

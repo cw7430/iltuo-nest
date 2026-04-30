@@ -52,25 +52,23 @@ export class ProductService {
   async createproduct(
     userId: bigint,
     req: FastifyRequest,
-    requestDto: CreateProductRequestDto,
+    reqDto: CreateProductRequestDto,
   ): Promise<void> {
     const file = await req.file();
 
     const uploadImage = await this.fileUtil.uploadImage(file, 'products');
 
-    const minerCategoryId = BigInt(requestDto.minerCategoryId);
-    const price = BigInt(requestDto.price);
-    const discountRate = requestDto.discountRate
-      ? BigInt(requestDto.discountRate)
-      : 0n;
+    const minerCategoryId = BigInt(reqDto.minerCategoryId);
+    const price = BigInt(reqDto.price);
+    const discountRate = reqDto.discountRate ? BigInt(reqDto.discountRate) : 0n;
 
     try {
       const result = await this.db.transaction(async (tx) => {
         const [product] = await this.productRepository.createProduct(
           tx,
           minerCategoryId,
-          requestDto.productName,
-          requestDto.productComments,
+          reqDto.productName,
+          reqDto.productComments,
           price,
           discountRate,
         );
@@ -96,12 +94,14 @@ export class ProductService {
     }
   }
 
-  async productImage(
-    req: FastifyRequest,
-    reqDto: ProductImageRequestDto,
-  ): Promise<void> {
+  async productImage(req: FastifyRequest): Promise<void> {
     const file = await req.file();
 
+    if (!file) {
+      throw new CustomException('RESOURCE_NOT_FOUND');
+    }
+
+    const reqDto = plainToInstance(ProductImageRequestDto, file.fields);
     const uploadImage = await this.fileUtil.uploadImage(file, 'products');
 
     await this.productRepository.createProductImage(

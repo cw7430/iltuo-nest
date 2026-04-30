@@ -15,6 +15,20 @@
       "when": 1777423894429,
       "tag": "0001_tiny_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777525569422,
+      "tag": "0002_lumpy_hardball",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777527418903,
+      "tag": "0003_puzzling_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

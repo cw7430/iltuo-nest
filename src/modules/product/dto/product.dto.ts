@@ -34,9 +34,7 @@ export class CreateProductRequestDto {
   })
   productName!: string;
 
-  @IsNotEmpty({
-    message: '제품설명을 입력해주세요.',
-  })
+  @IsOptional()
   @IsString({
     message: '제품설명 형식이 올바르지 않습니다.',
   })
@@ -45,7 +43,7 @@ export class CreateProductRequestDto {
     description: '제품설명',
     type: String,
   })
-  productComments!: string;
+  productComments: string | null = null;
 
   @IsNotEmpty({
     message: '가격을 입력하여주세요.',
