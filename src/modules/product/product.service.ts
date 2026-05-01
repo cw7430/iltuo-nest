@@ -6,11 +6,7 @@ import { plainToInstance } from 'class-transformer';
 import { ProductRepository } from './product.repository';
 import * as schema from '@/modules/database/schemas';
 import { CustomException } from '@/common/api/exception';
-import {
-  CategoryResponseDto,
-  CreateProductRequestDto,
-  ProductImageRequestDto,
-} from './dto';
+import { CategoryResponseDto, CreateProductRequestDto } from './dto';
 import { FileUtil } from '@/modules/file/file.util';
 
 @Injectable()
@@ -94,23 +90,32 @@ export class ProductService {
     }
   }
 
-  async productImage(req: FastifyRequest): Promise<void> {
+  async productImage(
+    req: FastifyRequest,
+    productImageId: number,
+  ): Promise<void> {
     const file = await req.file();
 
     if (!file) {
       throw new CustomException('RESOURCE_NOT_FOUND');
     }
 
-    const reqDto = plainToInstance(ProductImageRequestDto, file.fields);
     const uploadImage = await this.fileUtil.uploadImage(file, 'products');
 
-    await this.productRepository.createProductImage(
-      this.db,
-      BigInt(reqDto.productImageId),
-      uploadImage.fileName,
-      uploadImage.originalName,
-      uploadImage.mimeType,
-      uploadImage.fileSize,
-    );
+    try {
+      await this.productRepository.createProductImage(
+        this.db,
+        BigInt(productImageId),
+        uploadImage.fileName,
+        uploadImage.originalName,
+        uploadImage.mimeType,
+        uploadImage.fileSize,
+      );
+    } catch (e) {
+      await this.fileUtil
+        .unlinkFile('img', 'product', uploadImage.fileName)
+        .catch(() => {});
+      throw e;
+    }
   }
 }

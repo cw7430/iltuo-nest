@@ -1,14 +1,25 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { type FastifyRequest } from 'fastify';
 
 import { ProductService } from './product.service';
 import { ApiSuccessResponse } from '@/common/decorator';
 import { SuccessResponseDto } from '@/common/api/response';
-import {
-  CategoryResponseDto,
-  CreateProductRequestDto,
-} from './dto';
+import { CategoryResponseDto, CreateProductRequestDto } from './dto';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 import { CurrentUser } from '@/modules/auth/decorator';
 
@@ -23,7 +34,7 @@ export class ProductController {
     return SuccessResponseDto.okWith(await this.productService.categories());
   }
 
-  @Post('/product')
+  @Post()
   @UseGuards(AuthGuard)
   @ApiBearerAuth('accessToken')
   @ApiSuccessResponse()
@@ -36,7 +47,7 @@ export class ProductController {
     return SuccessResponseDto.ok();
   }
 
-  @Post('/upload')
+  @Post('/upload/:productImageId')
   @ApiSuccessResponse()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -44,19 +55,23 @@ export class ProductController {
       type: 'object',
       properties: {
         file: {
-          type: 'string',
+          type: 'file',
           format: 'binary',
-        },
-        productImageId: {
-          type: 'string',
-          description: '일련번호',
-          example: '1',
         },
       },
     },
   })
-  async productImage(@Req() req: FastifyRequest) {
-    await this.productService.productImage(req);
+  @ApiParam({
+    name: 'productImageId',
+    description: '제품 일련번호',
+    type: 'number',
+    example: '1',
+  })
+  async productImage(
+    @Req() req: FastifyRequest,
+    @Param('productImageId') productImageId: number,
+  ) {
+    await this.productService.productImage(req, productImageId);
     return SuccessResponseDto.ok();
   }
 }
