@@ -12,7 +12,7 @@ export class AppRepository {
       .select()
       .from(majorCategory)
       .where(eq(majorCategory.isValid, true))
-      .orderBy(majorCategory.sortKey);
+      .orderBy(majorCategory.sortKey, majorCategory.majorCategoryId);
 
     return result ?? undefined;
   }
@@ -47,7 +47,11 @@ export class AppRepository {
         majorCategory,
         eq(majorCategoryId, majorCategory.majorCategoryId),
       )
-      .orderBy(majorCategory.sortKey, minerCategory.sortKey);
+      .orderBy(
+        majorCategory.sortKey,
+        minerCategory.sortKey,
+        minerCategory.minerCategoryId,
+      );
 
     return result ?? undefined;
   }
