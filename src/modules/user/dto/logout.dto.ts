@@ -6,6 +6,7 @@ export class LogoutRequestDto {
   @ApiProperty({
     description: 'Refresh Token',
     type: String,
+    nullable: true,
   })
   refreshToken: string | null = null;
 }

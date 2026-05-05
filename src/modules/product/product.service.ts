@@ -5,8 +5,7 @@ import { plainToInstance } from 'class-transformer';
 
 import { ProductRepository } from './product.repository';
 import * as schema from '@/modules/database/schemas';
-import { CustomException } from '@/common/api/exception';
-import { CategoryResponseDto, CreateProductRequestDto } from './dto';
+import { ProductResponseDto, CreateProductRequestDto } from './dto';
 import { FileUtil } from '@/modules/file/file.util';
 
 @Injectable()
@@ -20,100 +19,62 @@ export class ProductService {
 
   private readonly log = new Logger(ProductService.name);
 
-  async categories(): Promise<CategoryResponseDto[]> {
-    const majorCategories = await this.productRepository.findAllMajorCategories(
-      this.db,
+  async recommendedProducts() {
+    return plainToInstance(
+      ProductResponseDto,
+      await this.productRepository.findProductsByRecommended(this.db),
+      {
+        excludeExtraneousValues: true,
+      },
     );
-    const minerCategories = await this.productRepository.findAllMinerCategories(
-      this.db,
-    );
-
-    if (!majorCategories || !minerCategories) {
-      throw new CustomException('RESOURCE_NOT_FOUND');
-    }
-
-    const response = majorCategories.map((majorCategory) => {
-      const minerCategory = minerCategories.filter(
-        (minerCategory) =>
-          minerCategory.majorCategoryId === majorCategory.majorCategoryId,
-      );
-      return { ...majorCategory, minerCategories: minerCategory };
-    });
-
-    return plainToInstance(CategoryResponseDto, response, {
-      excludeExtraneousValues: true,
-    });
   }
 
-  async createproduct(
-    userId: bigint,
-    req: FastifyRequest,
-    reqDto: CreateProductRequestDto,
-  ): Promise<void> {
-    const file = await req.file();
-
-    const uploadImage = await this.fileUtil.uploadImage(file, 'products');
-
+  async createproduct(userId: bigint, reqDto: CreateProductRequestDto) {
     const minerCategoryId = BigInt(reqDto.minerCategoryId);
     const price = BigInt(reqDto.price);
     const discountRate = reqDto.discountRate ? BigInt(reqDto.discountRate) : 0n;
 
-    try {
-      const result = await this.db.transaction(async (tx) => {
-        const [product] = await this.productRepository.createProduct(
-          tx,
-          minerCategoryId,
-          reqDto.productName,
-          reqDto.productComments,
-          price,
-          discountRate,
-        );
-        await this.productRepository.createProductImage(
-          tx,
-          product.productId,
-          uploadImage.fileName,
-          uploadImage.originalName,
-          uploadImage.mimeType,
-          uploadImage.fileSize,
-        );
-        return product;
-      });
+    const [result] = await this.productRepository.createProduct(
+      this.db,
+      minerCategoryId,
+      reqDto.productName,
+      reqDto.productComments,
+      price,
+      discountRate,
+    );
 
-      this.log.log(
-        `Create Product successfully for user ID: ${userId} Product ID: ${result.productId}`,
-      );
-    } catch (e) {
-      await this.fileUtil
-        .unlinkFile('img', 'product', uploadImage.fileName)
-        .catch(() => {});
-      throw e;
-    }
+    this.log.log(
+      `Create Product successfully for user ID: ${userId} Product ID: ${result.productId}`,
+    );
   }
 
-  async productImage(
+  async uploadProductImage(
+    userId: bigint,
     req: FastifyRequest,
     productImageId: number,
-  ): Promise<void> {
+  ) {
     const file = await req.file();
 
-    if (!file) {
-      throw new CustomException('RESOURCE_NOT_FOUND');
-    }
-
-    const uploadImage = await this.fileUtil.uploadImage(file, 'products');
+    const fileInfo = this.fileUtil.getFileInfo(file);
 
     try {
-      await this.productRepository.createProductImage(
+      const uploadImage = await this.fileUtil.uploadImage(fileInfo, 'products');
+
+      const [result] = await this.productRepository.createProductImage(
         this.db,
         BigInt(productImageId),
-        uploadImage.fileName,
-        uploadImage.originalName,
-        uploadImage.mimeType,
+        fileInfo.fileName,
+        fileInfo.originalName,
+        fileInfo.mimeType,
         uploadImage.fileSize,
+      );
+
+      this.log.log(
+        `Create Product successfully for user ID: ${userId} Product ID: ${result.productImageId}`,
       );
     } catch (e) {
       await this.fileUtil
-        .unlinkFile('img', 'product', uploadImage.fileName)
+        .unlinkFile('img', 'product', fileInfo.fileName)
         .catch(() => {});
       throw e;
     }
