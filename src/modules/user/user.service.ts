@@ -26,9 +26,7 @@ export class UserService {
 
   private readonly log = new Logger(UserService.name);
 
-  async nativeLogin(
-    reqDto: LoginRequestDto,
-  ): Promise<LoginAndRefreshResponseDto> {
+  async nativeLogin(reqDto: LoginRequestDto) {
     const signInResult =
       await this.userRepository.findNativeLoginInfoByUserName(
         this.db,
@@ -74,10 +72,7 @@ export class UserService {
     });
   }
 
-  async refresh(
-    req: FastifyRequest,
-    reqDto: RefreshRequestDto,
-  ): Promise<LoginAndRefreshResponseDto> {
+  async refresh(req: FastifyRequest, reqDto: RefreshRequestDto) {
     const formalTokenInfo = await this.authUtil.getFormalRefreshInfo(req);
 
     const isRefreshTokenIn = await this.userRepository.existsByUserIdAndToken(
@@ -138,7 +133,7 @@ export class UserService {
     });
   }
 
-  async logout(reqDto: LogoutRequestDto): Promise<void> {
+  async logout(reqDto: LogoutRequestDto) {
     if (!reqDto.refreshToken) return;
 
     await this.userRepository.deleteRefreshTokenByToken(

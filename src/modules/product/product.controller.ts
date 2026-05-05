@@ -19,7 +19,7 @@ import { type FastifyRequest } from 'fastify';
 import { ProductService } from './product.service';
 import { ApiSuccessResponse } from '@/common/decorator';
 import { SuccessResponseDto } from '@/common/api/response';
-import { CategoryResponseDto, CreateProductRequestDto } from './dto';
+import { CreateProductRequestDto, ProductResponseDto } from './dto';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 import { CurrentUser } from '@/modules/auth/decorator';
 
@@ -28,10 +28,12 @@ import { CurrentUser } from '@/modules/auth/decorator';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Get('/categories')
-  @ApiSuccessResponse(CategoryResponseDto)
-  async categories() {
-    return SuccessResponseDto.okWith(await this.productService.categories());
+  @Get('/recommended')
+  @ApiSuccessResponse(ProductResponseDto)
+  async recommendedProducts() {
+    return SuccessResponseDto.okWith(
+      await this.productService.recommendedProducts(),
+    );
   }
 
   @Post()
@@ -40,14 +42,14 @@ export class ProductController {
   @ApiSuccessResponse()
   async createproduct(
     @CurrentUser('userId') userId: bigint,
-    @Req() req: FastifyRequest,
     @Body() requestDto: CreateProductRequestDto,
   ) {
-    await this.productService.createproduct(userId, req, requestDto);
+    await this.productService.createproduct(userId, requestDto);
     return SuccessResponseDto.ok();
   }
 
   @Post('/upload/:productImageId')
+  @UseGuards(AuthGuard)
   @ApiSuccessResponse()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -67,11 +69,12 @@ export class ProductController {
     type: 'number',
     example: '1',
   })
-  async productImage(
+  async uploadProductImage(
+    @CurrentUser('userId') userId: bigint,
     @Req() req: FastifyRequest,
     @Param('productImageId') productImageId: number,
   ) {
-    await this.productService.productImage(req, productImageId);
+    await this.productService.uploadProductImage(userId, req, productImageId);
     return SuccessResponseDto.ok();
   }
 }

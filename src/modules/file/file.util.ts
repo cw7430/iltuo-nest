@@ -10,16 +10,12 @@ import { CustomException } from '@/common/api/exception';
 
 @Injectable()
 export class FileUtil {
-  async uploadImage(file: MultipartFile | undefined, dir: string) {
+  getFileInfo(file: MultipartFile | undefined) {
     if (!file) {
       throw new CustomException('RESOURCE_NOT_FOUND');
     }
 
     const mimeType = file.mimetype;
-
-    if (!mimeType.startsWith('image/')) {
-      throw new CustomException('CONFLICT');
-    }
 
     const uuid = randomUUID();
     const originalName = file.filename;
@@ -27,8 +23,26 @@ export class FileUtil {
     const ext = path.extname(originalName);
     const fileName = `${uuid}${ext}`;
 
+    return { file, fileName, originalName, mimeType };
+  }
+
+  async uploadImage(
+    info: {
+      file: MultipartFile;
+      fileName: string;
+      originalName: string;
+      mimeType: string;
+    },
+    dir: string,
+  ) {
+    const mimeType = info.file.mimetype;
+
+    if (!mimeType.startsWith('image/')) {
+      throw new CustomException('CONFLICT');
+    }
+
     const uploadDir = path.join(process.cwd(), 'uploads', 'img', dir);
-    const filePath = path.join(uploadDir, fileName);
+    const filePath = path.join(uploadDir, info.fileName);
 
     await fs.promises.mkdir(uploadDir, { recursive: true });
 
@@ -41,11 +55,11 @@ export class FileUtil {
       },
     });
 
-    await pipeline(file.file, sizeTracker, fs.createWriteStream(filePath));
+    await pipeline(info.file.file, sizeTracker, fs.createWriteStream(filePath));
 
     const fileSize = BigInt(totalSize);
 
-    return { fileName, originalName, mimeType, fileSize };
+    return { fileSize };
   }
 
   async unlinkFile(type: 'img' | 'vid', dir: string, fileName: string) {

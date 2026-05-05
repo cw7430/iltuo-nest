@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
+import { AppRepository } from './app.repository';
 import { AppService } from './app.service';
 import { appConfig, dbConfig, jwtConfig } from './common/config';
 import { DatabaseModule } from './modules/database/database.module';
@@ -24,6 +25,6 @@ import { ProductModule } from './modules/product/product.module';
     ProductModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppRepository, AppService],
 })
 export class AppModule {}

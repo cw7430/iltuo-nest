@@ -42,75 +42,26 @@ export class ProductRepository {
       .innerJoin(productImage, eq(productId, productImageId))
       .innerJoin(
         minerCategory,
-        eq(minerCategoryId, minerCategory.majorCategoryId),
+        eq(minerCategoryId, minerCategory.minerCategoryId),
       )
       .innerJoin(
         majorCategory,
-        eq(
-          majorCategory,
-          eq(minerCategory.majorCategoryId, majorCategory.majorCategoryId),
-        ),
+        eq(minerCategory.majorCategoryId, majorCategory.majorCategoryId),
       );
   }
 
-  async findAllMajorCategories(conn: DbOrTx) {
-    const { majorCategory } = schema;
-    const result = await conn
-      .select()
-      .from(majorCategory)
-      .where(eq(majorCategory.isValid, true))
-      .orderBy(majorCategory.sortKey);
-
-    return result ?? undefined;
-  }
-
-  async findAllMinerCategories(conn: DbOrTx) {
-    const { minerCategory, majorCategory } = schema;
-    const {
-      minerCategoryId,
-      majorCategoryId,
-      sortKey,
-      minerCategoryName,
-      isValid,
-      createdAt,
-      updatedAt,
-      deletedAt,
-    } = minerCategory;
-
-    const result = await conn
-      .select({
-        minerCategoryId,
-        majorCategoryId,
-        sortKey,
-        minerCategoryName,
-        isValid,
-        createdAt,
-        updatedAt,
-        deletedAt,
-      })
-      .from(minerCategory)
-      .where(eq(isValid, true))
-      .innerJoin(
-        majorCategory,
-        eq(majorCategoryId, majorCategory.majorCategoryId),
-      )
-      .orderBy(majorCategory.sortKey, minerCategory.sortKey);
-
-    return result ?? undefined;
-  }
-
   async findProductsByRecommended(conn: DbOrTx) {
-    const { product, majorCategory } = schema;
+    const { product, majorCategory, minerCategory } = schema;
 
     const query = this.findAllProducts(conn);
 
     const result = await query
       .where(and(eq(product.isValid, true), eq(product.isRecommended, true)))
-      .orderBy(majorCategory.sortKey);
+      .orderBy(majorCategory.sortKey, minerCategory.sortKey);
 
     return result ?? undefined;
   }
-  
+
   async createProduct(
     conn: DbOrTx,
     minerCategoryId: bigint,
