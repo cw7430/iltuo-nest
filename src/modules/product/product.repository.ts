@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 
 import * as schema from '@/modules/database/schemas';
 import { type DbOrTx } from '@/modules/database/types';
@@ -50,6 +50,73 @@ export class ProductRepository {
       );
   }
 
+  async findProducts(
+    conn: DbOrTx,
+    majorCategoryId: bigint,
+    minerCategoryId: bigint,
+    limit: number,
+    sortKey: 'recommended' | 'price' | 'created',
+    sortOrder: 'asc' | 'desc',
+  ) {
+    const { product, majorCategory } = schema;
+
+    const rawQuery = this.findAllProducts(conn);
+
+    const whereQuery =
+      minerCategoryId === 0n
+        ? eq(majorCategory.majorCategoryId, majorCategoryId)
+        : eq(product.minerCategoryId, minerCategoryId);
+
+    const queryWithoutSort = rawQuery.where(whereQuery);
+
+    let query = queryWithoutSort.orderBy(
+      desc(product.isRecommended),
+      desc(product.createdAt),
+      product.price,
+      product.productId,
+    );
+
+    if (sortKey === 'created') {
+      if (sortOrder === 'asc') {
+        query = queryWithoutSort.orderBy(
+          product.createdAt,
+          desc(product.isRecommended),
+          product.price,
+          product.productId,
+        );
+      } else {
+        query = queryWithoutSort.orderBy(
+          desc(product.createdAt),
+          desc(product.isRecommended),
+          product.price,
+          product.productId,
+        );
+      }
+    }
+
+    if (sortKey === 'price') {
+      if (sortOrder === 'asc') {
+        query = queryWithoutSort.orderBy(
+          product.price,
+          desc(product.isRecommended),
+          desc(product.createdAt),
+          product.productId,
+        );
+      } else {
+        query = queryWithoutSort.orderBy(
+          desc(product.price),
+          desc(product.isRecommended),
+          desc(product.createdAt),
+          product.productId,
+        );
+      }
+    }
+
+    const result = await query.limit(limit);
+
+    return result ?? undefined;
+  }
+
   async findProductsByRecommended(conn: DbOrTx) {
     const { product, majorCategory, minerCategory } = schema;
 
@@ -57,7 +124,7 @@ export class ProductRepository {
 
     const result = await query
       .where(and(eq(product.isValid, true), eq(product.isRecommended, true)))
-      .orderBy(majorCategory.sortKey, minerCategory.sortKey);
+      .orderBy(majorCategory.sortKey, minerCategory.sortKey, product.productId);
 
     return result ?? undefined;
   }
