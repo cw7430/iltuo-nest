@@ -5,10 +5,11 @@ import {
   IsOptional,
   Matches,
 } from 'class-validator';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { TransformBigintToString } from '@/common/decorator';
+import { CategoryResponseDto } from '@/modules/global/dto';
 
 export class CreateProductRequestDto {
   @IsNotEmpty({
@@ -163,4 +164,18 @@ export class ProductResponseDto {
   @Expose()
   @ApiProperty({ description: '삭제일', type: Date, nullable: true })
   deletedAt!: Date | null;
+}
+
+export class ProductsResponseDto extends CategoryResponseDto {
+  constructor() {
+    super();
+  }
+
+  @Expose()
+  @Type(() => ProductResponseDto)
+  @ApiProperty({
+    description: '상품 목록',
+    type: () => [ProductResponseDto],
+  })
+  products!: ProductResponseDto[];
 }

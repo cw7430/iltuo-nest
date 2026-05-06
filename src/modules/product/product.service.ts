@@ -4,8 +4,13 @@ import { type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { plainToInstance } from 'class-transformer';
 
 import { ProductRepository } from './product.repository';
+import { GlobalRepository } from '../global/global.repository';
 import * as schema from '@/modules/database/schemas';
-import { ProductResponseDto, CreateProductRequestDto } from './dto';
+import {
+  ProductResponseDto,
+  ProductsResponseDto,
+  CreateProductRequestDto,
+} from './dto';
 import { FileUtil } from '@/modules/file/file.util';
 
 @Injectable()
@@ -14,6 +19,7 @@ export class ProductService {
     @Inject('DRIZZLE_CONNECTION')
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly productRepository: ProductRepository,
+    private readonly globalRepository: GlobalRepository,
     private readonly fileUtil: FileUtil,
   ) {}
 
@@ -27,6 +33,47 @@ export class ProductService {
         excludeExtraneousValues: true,
       },
     );
+  }
+
+  async products(
+    majorCategoryId: number,
+    minerCategoryId: number,
+    limit: number,
+    sort:
+      | 'recommended'
+      | 'priceAsc'
+      | 'priceDesc'
+      | 'createdAsc'
+      | 'createdDesc',
+  ) {
+    const majorCategory = await this.globalRepository.findMajorCategoryById(
+      this.db,
+      BigInt(majorCategoryId),
+    );
+
+    const minerCategories =
+      await this.globalRepository.findMinerCategoriesByMajorCategoryId(
+        this.db,
+        BigInt(majorCategoryId),
+      );
+
+    const products = await this.productRepository.findProducts(
+      this.db,
+      BigInt(majorCategoryId),
+      BigInt(minerCategoryId),
+      limit,
+      sort,
+    );
+
+    const response = {
+      ...majorCategory,
+      minerCategories,
+      products,
+    };
+
+    return plainToInstance(ProductsResponseDto, response, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async createproduct(userId: bigint, reqDto: CreateProductRequestDto) {
