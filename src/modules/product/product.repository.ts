@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, desc } from 'drizzle-orm';
+import { and, eq, asc, desc, type SQL } from 'drizzle-orm';
 
 import * as schema from '@/modules/database/schemas';
 import { type DbOrTx } from '@/modules/database/types';
@@ -50,71 +50,76 @@ export class ProductRepository {
       );
   }
 
+  private sortProducts(
+    sort:
+      | 'recommended'
+      | 'priceAsc'
+      | 'priceDesc'
+      | 'createdAsc'
+      | 'createdDesc' = 'recommended',
+  ) {
+    const { product } = schema;
+
+    const orderByMap: Record<string, SQL<unknown>[]> = {
+      recommended: [
+        desc(product.isRecommended),
+        desc(product.createdAt),
+        asc(product.price),
+      ],
+      createdDesc: [
+        desc(product.createdAt),
+        desc(product.isRecommended),
+        asc(product.price),
+      ],
+      createdAsc: [
+        asc(product.createdAt),
+        desc(product.isRecommended),
+        asc(product.price),
+      ],
+      priceAsc: [
+        asc(product.price),
+        desc(product.isRecommended),
+        desc(product.createdAt),
+      ],
+      priceDesc: [
+        desc(product.price),
+        desc(product.isRecommended),
+        desc(product.createdAt),
+      ],
+    };
+
+    return orderByMap[sort] || orderByMap.recommended;
+  }
+
   async findProducts(
     conn: DbOrTx,
     majorCategoryId: bigint,
     minerCategoryId: bigint,
     limit: number,
-    sortKey: 'recommended' | 'price' | 'created',
-    sortOrder: 'asc' | 'desc',
+    sort:
+      | 'recommended'
+      | 'priceAsc'
+      | 'priceDesc'
+      | 'createdAsc'
+      | 'createdDesc' = 'recommended',
   ) {
     const { product, majorCategory } = schema;
 
-    const rawQuery = this.findAllProducts(conn);
+    const query = this.findAllProducts(conn);
 
-    const whereQuery =
+    const whereClause =
       minerCategoryId === 0n
         ? eq(majorCategory.majorCategoryId, majorCategoryId)
         : eq(product.minerCategoryId, minerCategoryId);
 
-    const queryWithoutSort = rawQuery.where(whereQuery);
+    const orderSpecs = this.sortProducts(sort);
 
-    let query = queryWithoutSort.orderBy(
-      desc(product.isRecommended),
-      desc(product.createdAt),
-      product.price,
-      product.productId,
-    );
+    const result = await query
+      .where(whereClause)
+      .orderBy(...orderSpecs, asc(product.productId))
+      .limit(limit);
 
-    if (sortKey === 'created') {
-      if (sortOrder === 'asc') {
-        query = queryWithoutSort.orderBy(
-          product.createdAt,
-          desc(product.isRecommended),
-          product.price,
-          product.productId,
-        );
-      } else {
-        query = queryWithoutSort.orderBy(
-          desc(product.createdAt),
-          desc(product.isRecommended),
-          product.price,
-          product.productId,
-        );
-      }
-    }
-
-    if (sortKey === 'price') {
-      if (sortOrder === 'asc') {
-        query = queryWithoutSort.orderBy(
-          product.price,
-          desc(product.isRecommended),
-          desc(product.createdAt),
-          product.productId,
-        );
-      } else {
-        query = queryWithoutSort.orderBy(
-          desc(product.price),
-          desc(product.isRecommended),
-          desc(product.createdAt),
-          product.productId,
-        );
-      }
-    }
-
-    const result = await query.limit(limit);
-
-    return result ?? undefined;
+    return result;
   }
 
   async findProductsByRecommended(conn: DbOrTx) {
