@@ -34,7 +34,7 @@ import { CurrentUser } from '@/modules/auth/decorator';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Get('/:majorCategoryId/:minerCategoryId')
+  @Get('/:majorCategoryId')
   @ApiSuccessResponse(ProductsResponseDto)
   @ApiParam({
     name: 'majorCategoryId',
