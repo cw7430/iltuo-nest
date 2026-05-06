@@ -5,7 +5,7 @@ import * as schema from '@/modules/database/schemas';
 import { type DbOrTx } from '@/modules/database/types';
 
 @Injectable()
-export class AppRepository {
+export class GlobalRepository {
   async findAllMajorCategories(conn: DbOrTx) {
     const { majorCategory } = schema;
     const result = await conn
