@@ -48,7 +48,7 @@ class MinerCategoryResponseDto {
   deletedAt!: Date | null;
 }
 
-export class CategoryResponseDto {
+class MajorCategoryResponseDto {
   @Expose()
   @TransformBigintToString()
   @ApiProperty({
@@ -62,14 +62,6 @@ export class CategoryResponseDto {
   @TransformBigintToString()
   @ApiProperty({ description: '정렬 키', type: String, example: '1' })
   sortKey!: bigint;
-
-  @Expose()
-  @Type(() => MinerCategoryResponseDto)
-  @ApiProperty({
-    description: '부 카테고리',
-    type: () => [MinerCategoryResponseDto],
-  })
-  minerCategories!: MinerCategoryResponseDto[];
 
   @Expose()
   @ApiProperty({ description: '주 카테고리 명칭', type: String, example: '1' })
@@ -90,4 +82,18 @@ export class CategoryResponseDto {
   @Expose()
   @ApiProperty({ description: '삭제일', type: Date, nullable: true })
   deletedAt!: Date | null;
+}
+
+export class CategoryResponseDto extends MajorCategoryResponseDto {
+  constructor() {
+    super();
+  }
+
+  @Expose()
+  @Type(() => MinerCategoryResponseDto)
+  @ApiProperty({
+    description: '부 카테고리',
+    type: () => [MinerCategoryResponseDto],
+  })
+  minerCategories!: MinerCategoryResponseDto[];
 }
