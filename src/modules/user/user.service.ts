@@ -63,6 +63,7 @@ export class UserService {
       ...tokenResponse,
       authRole: signInResult.authRole,
       authType: signInResult.authType,
+      isAuto: reqDto.isAuto,
     };
 
     this.log.log(`Sign In successfully for user ID: ${signInResult.userId}`);
@@ -122,6 +123,7 @@ export class UserService {
       ...tokenResponse,
       authRole: refreshResult.authRole,
       authType: refreshResult.authType,
+      isAuto: reqDto.isAuto,
     };
 
     this.log.log(

@@ -25,4 +25,12 @@ export class LoginAndRefreshResponseDto {
   @Expose()
   @ApiProperty({ description: '로그인 방식', type: String, example: 'NATIVE' })
   authType!: 'NATIVE' | 'SOCIAL';
+
+  @Expose()
+  @ApiProperty({
+    description: '자동 로그인 여부',
+    type: Boolean,
+    example: false,
+  })
+  isAuto!: boolean;
 }
