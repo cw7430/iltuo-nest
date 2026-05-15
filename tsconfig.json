@@ -12,6 +12,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": false,
+    "rootDir": "./src",
     "outDir": "./dist",
     // "baseUrl": "./",
     "incremental": true,
