@@ -1,4 +1,5 @@
 export {
+  ProductsRequestDto,
   CreateProductRequestDto,
   ProductResponseDto,
   ProductsResponseDto,

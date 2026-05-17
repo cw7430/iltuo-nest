@@ -4,12 +4,52 @@ import {
   MaxLength,
   IsOptional,
   Matches,
+  IsIn,
 } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-import { TransformBigintToString } from '@/common/decorator';
-import { CategoryResponseDto } from '@/modules/global/dto';
+import {
+  IsBigInt,
+  TransformBigintToString,
+  TransformStringToBigint,
+} from '@/common/decorator';
+import { PageRequestDto } from '@/modules/global/dto';
+import { CategoryResponseDto, PageResponseDto } from '@/modules/global/dto';
+
+export class ProductsRequestDto extends PageRequestDto {
+  constructor() {
+    super();
+  }
+
+  @TransformStringToBigint()
+  @ApiProperty({
+    description: '부 카테고리 일련번호',
+    type: String,
+    example: '0',
+  })
+  @IsOptional()
+  @IsBigInt({
+    message: '숫자만 입력 가능합니다.',
+  })
+  minerCategoryId: bigint = 0n;
+
+  @IsOptional()
+  @IsIn(['recommended', 'priceAsc', 'priceDesc', 'createdAsc', 'createdDesc'], {
+    message: '정렬 기준이 올바르지 않습니다.',
+  })
+  @ApiProperty({
+    description: '정렬 기준',
+    type: String,
+    example: 'recommended',
+  })
+  sort:
+    | 'recommended'
+    | 'priceAsc'
+    | 'priceDesc'
+    | 'createdAsc'
+    | 'createdDesc' = 'recommended';
+}
 
 export class CreateProductRequestDto {
   @IsNotEmpty({
@@ -172,10 +212,10 @@ export class ProductsResponseDto extends CategoryResponseDto {
   }
 
   @Expose()
-  @Type(() => ProductResponseDto)
+  @Type(() => PageResponseDto<ProductResponseDto[]>)
   @ApiProperty({
     description: '상품 목록',
-    type: () => [ProductResponseDto],
+    type: () => [PageResponseDto<ProductResponseDto[]>],
   })
-  products!: ProductResponseDto[];
+  products!: PageResponseDto<ProductResponseDto[]>;
 }
