@@ -4,14 +4,16 @@ import { type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { plainToInstance } from 'class-transformer';
 
 import { ProductRepository } from './product.repository';
-import { GlobalRepository } from '../global/global.repository';
+import { GlobalRepository } from '@/modules/global/global.repository';
 import * as schema from '@/modules/database/schemas';
 import {
   ProductResponseDto,
   ProductsResponseDto,
   CreateProductRequestDto,
+  ProductsRequestDto,
 } from './dto';
 import { FileUtil } from '@/modules/file/file.util';
+import { PageResponseDto } from '@/modules/global/dto';
 
 @Injectable()
 export class ProductService {
@@ -35,43 +37,42 @@ export class ProductService {
     );
   }
 
-  async products(
-    majorCategoryId: number,
-    minerCategoryId: number,
-    limit: number,
-    sort:
-      | 'recommended'
-      | 'priceAsc'
-      | 'priceDesc'
-      | 'createdAsc'
-      | 'createdDesc',
-  ) {
+  async products(majorCategoryId: bigint, reqDto: ProductsRequestDto) {
     const majorCategory = await this.globalRepository.findMajorCategoryById(
       this.db,
-      BigInt(majorCategoryId),
+      majorCategoryId,
     );
 
     const minerCategories =
       await this.globalRepository.findMinerCategoriesByMajorCategoryId(
         this.db,
-        BigInt(majorCategoryId),
+        majorCategoryId,
       );
 
     const products = await this.productRepository.findProducts(
       this.db,
-      BigInt(majorCategoryId),
-      BigInt(minerCategoryId),
-      limit,
-      sort,
+      majorCategoryId,
+      reqDto.minerCategoryId,
+      reqDto.page,
+      reqDto.size,
+      reqDto.sort,
     );
 
-    const response = {
+    const totalElements = await this.productRepository.countProducts(this.db);
+
+    const contents = plainToInstance(ProductResponseDto, products, {
+      excludeExtraneousValues: true,
+    });
+
+    const pageProducts = PageResponseDto.of(contents, reqDto, totalElements);
+
+    const res = {
       ...majorCategory,
       minerCategories,
-      products,
+      pageProducts,
     };
 
-    return plainToInstance(ProductsResponseDto, response, {
+    return plainToInstance(ProductsResponseDto, res, {
       excludeExtraneousValues: true,
     });
   }

@@ -95,7 +95,8 @@ export class ProductRepository {
     conn: DbOrTx,
     majorCategoryId: bigint,
     minerCategoryId: bigint,
-    limit: number,
+    page: number,
+    size: number,
     sort:
       | 'recommended'
       | 'priceAsc'
@@ -117,7 +118,8 @@ export class ProductRepository {
     const result = await query
       .where(whereClause)
       .orderBy(...orderSpecs, asc(product.productId))
-      .limit(limit);
+      .offset((page - 1) * size)
+      .limit(size);
 
     return result;
   }
@@ -132,6 +134,10 @@ export class ProductRepository {
       .orderBy(majorCategory.sortKey, minerCategory.sortKey, product.productId);
 
     return result ?? undefined;
+  }
+
+  async countProducts(conn: DbOrTx) {
+    return conn.$count(schema.product);
   }
 
   async createProduct(

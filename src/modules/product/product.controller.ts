@@ -13,7 +13,6 @@ import {
   ApiBody,
   ApiConsumes,
   ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { type FastifyRequest } from 'fastify';
@@ -24,6 +23,7 @@ import { SuccessResponseDto } from '@/common/api/response';
 import {
   CreateProductRequestDto,
   ProductResponseDto,
+  ProductsRequestDto,
   ProductsResponseDto,
 } from './dto';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
@@ -39,49 +39,15 @@ export class ProductController {
   @ApiParam({
     name: 'majorCategoryId',
     description: '주 카테고리 일련번호',
-    type: 'number',
-    example: '1',
-  })
-  @ApiQuery({
-    name: 'minerCategoryId',
-    description: '부 카테고리 일련번호',
-    required: false,
-    nullable: true,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'limit',
-    description: '한 번에 보여줄 수',
-    required: false,
-    nullable: true,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'sort',
-    description: '정렬',
-    required: false,
-    nullable: true,
-    type: String,
+    type: 'string',
+    example: 1,
   })
   async products(
-    @Param('majorCategoryId') majorCategoryId: number,
-    @Query('minerCategoryId') minerCategoryId: number = 0,
-    @Query('limit') limit: number = 8,
-    @Query('sort')
-    sort:
-      | 'recommended'
-      | 'priceAsc'
-      | 'priceDesc'
-      | 'createdAsc'
-      | 'createdDesc' = 'recommended',
+    @Param('majorCategoryId') majorCategoryId: bigint,
+    @Query() reqDto: ProductsRequestDto,
   ) {
     return SuccessResponseDto.okWith(
-      await this.productService.products(
-        majorCategoryId,
-        minerCategoryId,
-        limit,
-        sort,
-      ),
+      await this.productService.products(majorCategoryId, reqDto),
     );
   }
 
