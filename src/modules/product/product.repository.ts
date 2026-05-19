@@ -169,7 +169,7 @@ export class ProductRepository {
   }
 
   async findProductById(conn: DbOrTx, id: bigint) {
-    const { product, productImage } = schema;
+    const { product, productImage, minerCategory } = schema;
     const {
       productId,
       minerCategoryId,
@@ -184,10 +184,12 @@ export class ProductRepository {
       deletedAt,
     } = product;
     const { productImageId, fileName } = productImage;
+    const { majorCategoryId } = minerCategory;
 
     const result = await conn
       .select({
         productId,
+        majorCategoryId,
         minerCategoryId,
         productName,
         productComments,
@@ -202,14 +204,18 @@ export class ProductRepository {
       })
       .from(product)
       .innerJoin(productImage, eq(productId, productImageId))
+      .innerJoin(
+        minerCategory,
+        eq(minerCategoryId, minerCategory.minerCategoryId),
+      )
       .where(and(eq(isValid, true), eq(productId, id)))
       .limit(1);
 
     return result[0] ?? undefined;
   }
 
-  async findOptionsByMinerCategoryId(conn: DbOrTx, id: bigint) {
-    const { majorCategory, minerCategory, option } = schema;
+  async findOptionsByMajorCategoryId(conn: DbOrTx, id: bigint) {
+    const { option } = schema;
     const {
       optionId,
       majorCategoryId,
@@ -235,16 +241,38 @@ export class ProductRepository {
         deletedAt,
       })
       .from(option)
-      .innerJoin(
-        majorCategory,
-        eq(majorCategoryId, majorCategory.majorCategoryId),
-      )
-      .innerJoin(
-        minerCategory,
-        eq(majorCategory.majorCategoryId, minerCategory.minerCategoryId),
-      )
-      .where(and(eq(isValid, true), eq(minerCategory.minerCategoryId, id)))
+      .where(and(eq(isValid, true), eq(majorCategoryId, id)))
       .orderBy(asc(sortKey), asc(optionId));
+  }
+
+  async findDetailOptionsByMajorCategoryId(conn: DbOrTx, id: bigint) {
+    const { detailOption, option } = schema;
+    const {
+      detailOptionId,
+      optionId,
+      detailOptionName,
+      optionValue,
+      isValid,
+      createdAt,
+      updatedAt,
+      deletedAt,
+    } = detailOption;
+
+    return conn
+      .select({
+        detailOptionId,
+        optionId,
+        detailOptionName,
+        optionValue,
+        isValid,
+        createdAt,
+        updatedAt,
+        deletedAt,
+      })
+      .from(detailOption)
+      .innerJoin(option, eq(optionId, option.optionId))
+      .where(and(eq(isValid, true), eq(option.majorCategoryId, id)))
+      .orderBy(asc(option.sortKey), asc(optionValue), asc(detailOptionId));
   }
 
   async createProduct(

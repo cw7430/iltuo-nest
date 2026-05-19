@@ -14,9 +14,12 @@ import {
   TransformBigintToString,
   TransformStringToBigint,
 } from '@/common/decorator';
-import { PageRequestDto } from '@/modules/global/dto';
-import { CategoryResponseDto, PageResponseDto } from '@/modules/global/dto';
-
+import {
+  PageRequestDto,
+  CategoryResponseDto,
+  PageResponseDto,
+} from '@/modules/global/dto';
+import { OptionResponseDto } from './option.dto';
 export class ProductsRequestDto extends PageRequestDto {
   constructor() {
     super();
@@ -232,4 +235,18 @@ export class ProductsResponseDto extends CategoryResponseDto {
     type: () => PagedProductsResponseDto,
   })
   products!: PagedProductsResponseDto;
+}
+
+export class ProductDetailResponseDto extends ProductResponseDto {
+  constructor() {
+    super();
+  }
+
+  @Expose()
+  @Type(() => OptionResponseDto)
+  @ApiProperty({
+    description: '옵션 목록',
+    type: () => [OptionResponseDto],
+  })
+  options!: OptionResponseDto;
 }

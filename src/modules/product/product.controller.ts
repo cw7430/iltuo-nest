@@ -22,6 +22,7 @@ import { ApiSuccessResponse } from '@/common/decorator';
 import { SuccessResponseDto } from '@/common/api/response';
 import {
   CreateProductRequestDto,
+  ProductDetailResponseDto,
   ProductResponseDto,
   ProductsRequestDto,
   ProductsResponseDto,
@@ -48,6 +49,20 @@ export class ProductController {
   ) {
     return SuccessResponseDto.okWith(
       await this.productService.products(majorCategoryId, reqDto),
+    );
+  }
+
+  @Get('/detail/:productId')
+  @ApiSuccessResponse(ProductDetailResponseDto)
+  @ApiParam({
+    name: 'productId',
+    description: '상품 일련번호',
+    type: 'string',
+    example: 1,
+  })
+  async product(@Param('productId') productId: bigint) {
+    return SuccessResponseDto.okWith(
+      await this.productService.product(productId),
     );
   }
 
