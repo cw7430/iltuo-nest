@@ -64,7 +64,7 @@ export class PageResponseDto {
     type: Number,
     example: 1,
   })
-  page!: number;
+  currentPage!: number;
 
   @Expose()
   @ApiProperty({

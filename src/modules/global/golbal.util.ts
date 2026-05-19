@@ -20,7 +20,7 @@ export class GlobalUtil {
       content,
       totalElements,
       totalPages,
-      page: pageRequest.page,
+      currentPage: pageRequest.page,
       size: pageRequest.size,
       startPage,
       endPage,
