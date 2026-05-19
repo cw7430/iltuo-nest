@@ -5,6 +5,7 @@ import { plainToInstance } from 'class-transformer';
 
 import { ProductRepository } from './product.repository';
 import { GlobalRepository } from '@/modules/global/global.repository';
+import { GlobalUtil } from '@/modules/global/golbal.util';
 import * as schema from '@/modules/database/schemas';
 import {
   ProductResponseDto,
@@ -13,7 +14,6 @@ import {
   ProductsRequestDto,
 } from './dto';
 import { FileUtil } from '@/modules/file/file.util';
-import { PageResponseDto } from '@/modules/global/dto';
 
 @Injectable()
 export class ProductService {
@@ -22,6 +22,7 @@ export class ProductService {
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly productRepository: ProductRepository,
     private readonly globalRepository: GlobalRepository,
+    private readonly globalUtil: GlobalUtil,
     private readonly fileUtil: FileUtil,
   ) {}
 
@@ -60,16 +61,16 @@ export class ProductService {
 
     const totalElements = await this.productRepository.countProducts(this.db);
 
-    const contents = plainToInstance(ProductResponseDto, products, {
-      excludeExtraneousValues: true,
-    });
-
-    const pageProducts = PageResponseDto.of(contents, reqDto, totalElements);
+    const contents = this.globalUtil.convertToPage(
+      products,
+      reqDto,
+      totalElements,
+    );
 
     const res = {
       ...majorCategory,
       minerCategories,
-      pageProducts,
+      products: contents,
     };
 
     return plainToInstance(ProductsResponseDto, res, {

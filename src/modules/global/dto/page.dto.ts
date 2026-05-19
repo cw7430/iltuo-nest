@@ -1,4 +1,5 @@
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { TransformStringToNumber } from '@/common/decorator';
@@ -40,43 +41,68 @@ export class PageRequestDto {
   blockSize: number = 5;
 }
 
-export class PageResponseDto<T> {
-  protected constructor(
-    readonly content: T[],
-    readonly totalElements: number,
-    readonly totalPages: number,
-    readonly page: number,
-    readonly size: number,
-    readonly startPage: number,
-    readonly endPage: number,
-    readonly hasNext: boolean,
-    readonly hasPrevious: boolean,
-  ) {}
+export class PageResponseDto {
+  @Expose()
+  @ApiProperty({
+    description: '총 요소 개수',
+    type: Number,
+    example: 100,
+  })
+  totalElements!: number;
 
-  static of<T>(
-    content: T[],
-    pageRequest: PageRequestDto,
-    totalElements: number,
-  ): PageResponseDto<T> {
-    const totalPages = Math.ceil(totalElements / pageRequest.size);
+  @Expose()
+  @ApiProperty({
+    description: '총 페이지 개수',
+    type: Number,
+    example: 20,
+  })
+  totalPages!: number;
 
-    const startPage =
-      Math.floor((pageRequest.page - 1) / pageRequest.blockSize) *
-        pageRequest.blockSize +
-      1;
+  @Expose()
+  @ApiProperty({
+    description: '현재 페이지',
+    type: Number,
+    example: 1,
+  })
+  page!: number;
 
-    const endPage = Math.min(startPage + pageRequest.blockSize - 1, totalPages);
+  @Expose()
+  @ApiProperty({
+    description: '페이지 당 요소',
+    type: Number,
+    example: 8,
+  })
+  size!: number;
 
-    return new PageResponseDto(
-      content,
-      totalElements,
-      totalPages,
-      pageRequest.page,
-      pageRequest.size,
-      startPage,
-      endPage,
-      endPage < totalPages,
-      startPage > 1,
-    );
-  }
+  @Expose()
+  @ApiProperty({
+    description: '시작 페이지',
+    type: Number,
+    example: 1,
+  })
+  startPage!: number;
+
+  @Expose()
+  @ApiProperty({
+    description: '끝 페이지',
+    type: Number,
+    example: 20,
+  })
+  endPage!: number;
+
+  @Expose()
+  @ApiProperty({
+    description: '다음 블록 유무',
+    type: Boolean,
+    example: true,
+  })
+  hasNext!: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: '이전 블록 유무',
+    type: Boolean,
+    example: false,
+  })
+  hasPrevious!: boolean;
 }

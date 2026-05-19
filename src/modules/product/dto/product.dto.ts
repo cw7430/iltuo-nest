@@ -206,16 +206,30 @@ export class ProductResponseDto {
   deletedAt!: Date | null;
 }
 
+class PagedProductsResponseDto extends PageResponseDto {
+  constructor() {
+    super();
+  }
+
+  @Expose()
+  @Type(() => ProductResponseDto)
+  @ApiProperty({
+    description: '상품',
+    type: () => [ProductResponseDto],
+  })
+  content!: ProductResponseDto[];
+}
+
 export class ProductsResponseDto extends CategoryResponseDto {
   constructor() {
     super();
   }
 
   @Expose()
-  @Type(() => PageResponseDto<ProductResponseDto[]>)
+  @Type(() => PagedProductsResponseDto)
   @ApiProperty({
     description: '상품 목록',
-    type: () => [PageResponseDto<ProductResponseDto[]>],
+    type: () => PagedProductsResponseDto,
   })
-  products!: PageResponseDto<ProductResponseDto[]>;
+  products!: PagedProductsResponseDto;
 }
