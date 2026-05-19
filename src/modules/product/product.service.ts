@@ -12,8 +12,10 @@ import {
   ProductsResponseDto,
   CreateProductRequestDto,
   ProductsRequestDto,
+  ProductDetailResponseDto,
 } from './dto';
 import { FileUtil } from '@/modules/file/file.util';
+import { CustomException } from '@/common/api/exception';
 
 @Injectable()
 export class ProductService {
@@ -78,6 +80,43 @@ export class ProductService {
     };
 
     return plainToInstance(ProductsResponseDto, res, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async product(productId: bigint) {
+    const product = await this.productRepository.findProductById(
+      this.db,
+      productId,
+    );
+
+    if (!product) {
+      throw new CustomException('RESOURCE_NOT_FOUND');
+    }
+
+    const { majorCategoryId, ...restProduct } = product;
+
+    const options = await this.productRepository.findOptionsByMajorCategoryId(
+      this.db,
+      majorCategoryId,
+    );
+
+    const detailOptions =
+      await this.productRepository.findDetailOptionsByMajorCategoryId(
+        this.db,
+        majorCategoryId,
+      );
+
+    const combinedOptions = options.map((option) => {
+      const detailOption = detailOptions.filter(
+        (detailOption) => detailOption.optionId === option.optionId,
+      );
+      return { ...option, detailOptions: detailOption };
+    });
+
+    const res = { ...restProduct, options: combinedOptions };
+
+    return plainToInstance(ProductDetailResponseDto, res, {
       excludeExtraneousValues: true,
     });
   }

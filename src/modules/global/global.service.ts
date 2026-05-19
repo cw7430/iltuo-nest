@@ -34,7 +34,7 @@ export class GlobalService {
       throw new CustomException('RESOURCE_NOT_FOUND');
     }
 
-    const response = majorCategories.map((majorCategory) => {
+    const res = majorCategories.map((majorCategory) => {
       const minerCategory = minerCategories.filter(
         (minerCategory) =>
           minerCategory.majorCategoryId === majorCategory.majorCategoryId,
@@ -42,9 +42,7 @@ export class GlobalService {
       return { ...majorCategory, minerCategories: minerCategory };
     });
 
-    this.log.debug('Categories Called');
-
-    return plainToInstance(CategoryResponseDto, response, {
+    return plainToInstance(CategoryResponseDto, res, {
       excludeExtraneousValues: true,
     });
   }
