@@ -59,7 +59,11 @@ export class ProductService {
       reqDto.sort,
     );
 
-    const totalElements = await this.productRepository.countProducts(this.db);
+    const totalElements = await this.productRepository.countProducts(
+      this.db,
+      majorCategoryId,
+      reqDto.minerCategoryId,
+    );
 
     const contents = this.globalUtil.convertToPage(
       products,

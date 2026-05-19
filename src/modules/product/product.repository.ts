@@ -91,6 +91,17 @@ export class ProductRepository {
     return orderByMap[sort] || orderByMap.recommended;
   }
 
+  private productsWhereClause(
+    majorCategoryId: bigint,
+    minerCategoryId: bigint,
+  ) {
+    const { product, majorCategory } = schema;
+
+    return minerCategoryId === 0n
+      ? eq(majorCategory.majorCategoryId, majorCategoryId)
+      : eq(product.minerCategoryId, minerCategoryId);
+  }
+
   async findProducts(
     conn: DbOrTx,
     majorCategoryId: bigint,
@@ -104,14 +115,14 @@ export class ProductRepository {
       | 'createdAsc'
       | 'createdDesc' = 'recommended',
   ) {
-    const { product, majorCategory } = schema;
+    const { product } = schema;
 
     const query = this.findAllProducts(conn);
 
-    const whereClause =
-      minerCategoryId === 0n
-        ? eq(majorCategory.majorCategoryId, majorCategoryId)
-        : eq(product.minerCategoryId, minerCategoryId);
+    const whereClause = this.productsWhereClause(
+      majorCategoryId,
+      minerCategoryId,
+    );
 
     const orderSpecs = this.sortProducts(sort);
 
@@ -136,8 +147,19 @@ export class ProductRepository {
     return result ?? undefined;
   }
 
-  async countProducts(conn: DbOrTx) {
-    return conn.$count(schema.product);
+  async countProducts(
+    conn: DbOrTx,
+    majorCategoryId: bigint,
+    minerCategoryId: bigint,
+  ) {
+    const query = this.findAllProducts(conn);
+
+    const whereClause = this.productsWhereClause(
+      majorCategoryId,
+      minerCategoryId,
+    );
+
+    return conn.$count(query.where(whereClause));
   }
 
   async createProduct(
