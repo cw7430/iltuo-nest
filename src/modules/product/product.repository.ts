@@ -98,8 +98,14 @@ export class ProductRepository {
     const { product, majorCategory } = schema;
 
     return minerCategoryId === 0n
-      ? eq(majorCategory.majorCategoryId, majorCategoryId)
-      : eq(product.minerCategoryId, minerCategoryId);
+      ? and(
+          eq(product.isValid, true),
+          eq(majorCategory.majorCategoryId, majorCategoryId),
+        )
+      : and(
+          eq(product.isValid, true),
+          eq(product.minerCategoryId, minerCategoryId),
+        );
   }
 
   async findProducts(
@@ -160,6 +166,85 @@ export class ProductRepository {
     );
 
     return conn.$count(query.where(whereClause));
+  }
+
+  async findProductById(conn: DbOrTx, id: bigint) {
+    const { product, productImage } = schema;
+    const {
+      productId,
+      minerCategoryId,
+      productName,
+      productComments,
+      price,
+      discountedRate,
+      isRecommended,
+      isValid,
+      createdAt,
+      updatedAt,
+      deletedAt,
+    } = product;
+    const { productImageId, fileName } = productImage;
+
+    const result = await conn
+      .select({
+        productId,
+        minerCategoryId,
+        productName,
+        productComments,
+        fileName,
+        price,
+        discountedRate,
+        isRecommended,
+        isValid,
+        createdAt,
+        updatedAt,
+        deletedAt,
+      })
+      .from(product)
+      .innerJoin(productImage, eq(productId, productImageId))
+      .where(and(eq(isValid, true), eq(productId, id)))
+      .limit(1);
+
+    return result[0] ?? undefined;
+  }
+
+  async findOptionsByMinerCategoryId(conn: DbOrTx, id: bigint) {
+    const { majorCategory, minerCategory, option } = schema;
+    const {
+      optionId,
+      majorCategoryId,
+      sortKey,
+      optionName,
+      optionType,
+      isValid,
+      createdAt,
+      updatedAt,
+      deletedAt,
+    } = option;
+
+    return conn
+      .select({
+        optionId,
+        majorCategoryId,
+        sortKey,
+        optionName,
+        optionType,
+        isValid,
+        createdAt,
+        updatedAt,
+        deletedAt,
+      })
+      .from(option)
+      .innerJoin(
+        majorCategory,
+        eq(majorCategoryId, majorCategory.majorCategoryId),
+      )
+      .innerJoin(
+        minerCategory,
+        eq(majorCategory.majorCategoryId, minerCategory.minerCategoryId),
+      )
+      .where(and(eq(isValid, true), eq(minerCategory.minerCategoryId, id)))
+      .orderBy(asc(sortKey), asc(optionId));
   }
 
   async createProduct(
