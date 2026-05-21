@@ -10,3 +10,13 @@ export class RefreshRequestDto {
   })
   isAuto: boolean = false;
 }
+
+export class LogoutRequestDto {
+  @IsOptional()
+  @ApiProperty({
+    description: 'Refresh Token',
+    type: String,
+    nullable: true,
+  })
+  refreshToken: string | null = null;
+}

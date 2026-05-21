@@ -110,33 +110,35 @@ export class ProductRepository {
 
   async findProducts(
     conn: DbOrTx,
-    majorCategoryId: bigint,
-    minerCategoryId: bigint,
-    page: number,
-    size: number,
-    sort:
-      | 'recommended'
-      | 'priceAsc'
-      | 'priceDesc'
-      | 'createdAsc'
-      | 'createdDesc' = 'recommended',
+    param: {
+      majorCategoryId: bigint;
+      minerCategoryId: bigint;
+      page: number;
+      size: number;
+      sort:
+        | 'recommended'
+        | 'priceAsc'
+        | 'priceDesc'
+        | 'createdAsc'
+        | 'createdDesc';
+    },
   ) {
     const { product } = schema;
 
     const query = this.findAllProducts(conn);
 
     const whereClause = this.productsWhereClause(
-      majorCategoryId,
-      minerCategoryId,
+      param.majorCategoryId,
+      param.minerCategoryId,
     );
 
-    const orderSpecs = this.sortProducts(sort);
+    const orderSpecs = this.sortProducts(param.sort);
 
     const result = await query
       .where(whereClause)
       .orderBy(...orderSpecs, asc(product.productId))
-      .offset((page - 1) * size)
-      .limit(size);
+      .offset((param.page - 1) * param.size)
+      .limit(param.size);
 
     return result;
   }
@@ -155,20 +157,19 @@ export class ProductRepository {
 
   async countProducts(
     conn: DbOrTx,
-    majorCategoryId: bigint,
-    minerCategoryId: bigint,
+    param: { majorCategoryId: bigint; minerCategoryId: bigint },
   ) {
     const query = this.findAllProducts(conn);
 
     const whereClause = this.productsWhereClause(
-      majorCategoryId,
-      minerCategoryId,
+      param.majorCategoryId,
+      param.minerCategoryId,
     );
 
     return conn.$count(query.where(whereClause));
   }
 
-  async findProductById(conn: DbOrTx, id: bigint) {
+  async findProductById(conn: DbOrTx, param: { id: bigint }) {
     const { product, productImage, minerCategory } = schema;
     const {
       productId,
@@ -208,13 +209,13 @@ export class ProductRepository {
         minerCategory,
         eq(minerCategoryId, minerCategory.minerCategoryId),
       )
-      .where(and(eq(isValid, true), eq(productId, id)))
+      .where(and(eq(isValid, true), eq(productId, param.id)))
       .limit(1);
 
     return result[0] ?? undefined;
   }
 
-  async findOptionsByMajorCategoryId(conn: DbOrTx, id: bigint) {
+  async findOptionsByMajorCategoryId(conn: DbOrTx, param: { id: bigint }) {
     const { option } = schema;
     const {
       optionId,
@@ -241,11 +242,14 @@ export class ProductRepository {
         deletedAt,
       })
       .from(option)
-      .where(and(eq(isValid, true), eq(majorCategoryId, id)))
+      .where(and(eq(isValid, true), eq(majorCategoryId, param.id)))
       .orderBy(asc(sortKey), asc(optionId));
   }
 
-  async findDetailOptionsByMajorCategoryId(conn: DbOrTx, id: bigint) {
+  async findDetailOptionsByMajorCategoryId(
+    conn: DbOrTx,
+    param: { id: bigint },
+  ) {
     const { detailOption, option } = schema;
     const {
       detailOptionId,
@@ -271,19 +275,29 @@ export class ProductRepository {
       })
       .from(detailOption)
       .innerJoin(option, eq(optionId, option.optionId))
-      .where(and(eq(isValid, true), eq(option.majorCategoryId, id)))
+      .where(and(eq(isValid, true), eq(option.majorCategoryId, param.id)))
       .orderBy(asc(option.sortKey), asc(optionValue), asc(detailOptionId));
   }
 
   async createProduct(
     conn: DbOrTx,
-    minerCategoryId: bigint,
-    productName: string,
-    productComments: string | null,
-    price: bigint,
-    discountedRate: bigint,
+    param: {
+      minerCategoryId: bigint;
+      productName: string;
+      productComments: string | null;
+      price: bigint;
+      discountedRate: bigint;
+    },
   ) {
     const { product } = schema;
+
+    const {
+      minerCategoryId,
+      productName,
+      productComments,
+      price,
+      discountedRate,
+    } = param;
 
     return conn
       .insert(product)
@@ -299,13 +313,18 @@ export class ProductRepository {
 
   async createProductImage(
     conn: DbOrTx,
-    productImageId: bigint,
-    fileName: string,
-    originalName: string,
-    mimeType: string,
-    fileSize: bigint,
+    param: {
+      productImageId: bigint;
+      fileName: string;
+      originalName: string;
+      mimeType: string;
+      fileSize: bigint;
+    },
   ) {
     const { productImage } = schema;
+
+    const { productImageId, fileName, originalName, mimeType, fileSize } =
+      param;
 
     return conn
       .insert(productImage)

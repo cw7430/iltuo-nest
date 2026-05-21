@@ -10,6 +10,8 @@ import {
   RefreshRequestDto,
   LoginAndRefreshResponseDto,
   LogoutRequestDto,
+  CheckUserRequestDto,
+  NativeRegisterRequestDto,
 } from './dto';
 
 @Controller('/api/v1/user')
@@ -41,6 +43,22 @@ export class UserController {
   @ApiSuccessResponse()
   async logout(@Body() reqDto: LogoutRequestDto) {
     await this.userService.logout(reqDto);
+    return SuccessResponseDto.ok();
+  }
+
+  @Post('/check-user')
+  @ApiBody({ type: CheckUserRequestDto })
+  @ApiSuccessResponse()
+  async checkUser(@Body() reqDto: CheckUserRequestDto) {
+    await this.userService.checkUser(reqDto);
+    return SuccessResponseDto.ok();
+  }
+
+  @Post('/register/native')
+  @ApiBody({ type: NativeRegisterRequestDto })
+  @ApiSuccessResponse()
+  async nativeRegister(reqDto: NativeRegisterRequestDto) {
+    await this.userService.nativeRegister(reqDto);
     return SuccessResponseDto.ok();
   }
 }

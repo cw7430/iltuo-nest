@@ -43,29 +43,27 @@ export class ProductService {
   async products(majorCategoryId: bigint, reqDto: ProductsRequestDto) {
     const majorCategory = await this.globalRepository.findMajorCategoryById(
       this.db,
-      majorCategoryId,
+      { majorCategoryId },
     );
 
     const minerCategories =
       await this.globalRepository.findMinerCategoriesByMajorCategoryId(
         this.db,
-        majorCategoryId,
+        { majorCategoryId },
       );
 
-    const products = await this.productRepository.findProducts(
-      this.db,
+    const products = await this.productRepository.findProducts(this.db, {
       majorCategoryId,
-      reqDto.minerCategoryId,
-      reqDto.page,
-      reqDto.size,
-      reqDto.sort,
-    );
+      minerCategoryId: reqDto.minerCategoryId,
+      page: reqDto.page,
+      size: reqDto.size,
+      sort: reqDto.sort,
+    });
 
-    const totalElements = await this.productRepository.countProducts(
-      this.db,
+    const totalElements = await this.productRepository.countProducts(this.db, {
       majorCategoryId,
-      reqDto.minerCategoryId,
-    );
+      minerCategoryId: reqDto.minerCategoryId,
+    });
 
     const contents = this.globalUtil.convertToPage(
       products,
@@ -85,10 +83,9 @@ export class ProductService {
   }
 
   async product(productId: bigint) {
-    const product = await this.productRepository.findProductById(
-      this.db,
-      productId,
-    );
+    const product = await this.productRepository.findProductById(this.db, {
+      id: productId,
+    });
 
     if (!product) {
       throw new CustomException('RESOURCE_NOT_FOUND');
@@ -98,14 +95,15 @@ export class ProductService {
 
     const options = await this.productRepository.findOptionsByMajorCategoryId(
       this.db,
-      majorCategoryId,
+      {
+        id: majorCategoryId,
+      },
     );
 
     const detailOptions =
-      await this.productRepository.findDetailOptionsByMajorCategoryId(
-        this.db,
-        majorCategoryId,
-      );
+      await this.productRepository.findDetailOptionsByMajorCategoryId(this.db, {
+        id: majorCategoryId,
+      });
 
     const combinedOptions = options.map((option) => {
       const detailOption = detailOptions.filter(
@@ -124,16 +122,17 @@ export class ProductService {
   async createproduct(userId: bigint, reqDto: CreateProductRequestDto) {
     const minerCategoryId = BigInt(reqDto.minerCategoryId);
     const price = BigInt(reqDto.price);
-    const discountRate = reqDto.discountRate ? BigInt(reqDto.discountRate) : 0n;
+    const discountedRate = reqDto.discountRate
+      ? BigInt(reqDto.discountRate)
+      : 0n;
 
-    const [result] = await this.productRepository.createProduct(
-      this.db,
+    const [result] = await this.productRepository.createProduct(this.db, {
       minerCategoryId,
-      reqDto.productName,
-      reqDto.productComments,
+      productName: reqDto.productName,
+      productComments: reqDto.productComments,
       price,
-      discountRate,
-    );
+      discountedRate,
+    });
 
     this.log.log(
       `Create Product successfully for user ID: ${userId} Product ID: ${result.productId}`,
@@ -154,11 +153,13 @@ export class ProductService {
 
       const [result] = await this.productRepository.createProductImage(
         this.db,
-        BigInt(productImageId),
-        fileInfo.fileName,
-        fileInfo.originalName,
-        fileInfo.mimeType,
-        uploadImage.fileSize,
+        {
+          productImageId: BigInt(productImageId),
+          fileName: fileInfo.fileName,
+          originalName: fileInfo.originalName,
+          mimeType: fileInfo.mimeType,
+          fileSize: uploadImage.fileSize,
+        },
       );
 
       this.log.log(

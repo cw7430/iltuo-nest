@@ -46,12 +46,15 @@ export class GlobalRepository {
     return result ?? undefined;
   }
 
-  async findMajorCategoryById(conn: DbOrTx, majorCategoryId: bigint) {
+  async findMajorCategoryById(
+    conn: DbOrTx,
+    param: { majorCategoryId: bigint },
+  ) {
     const { majorCategory } = schema;
     const result = await this.findMajorCategories(conn).where(
       and(
         eq(majorCategory.isValid, true),
-        eq(majorCategory.majorCategoryId, majorCategoryId),
+        eq(majorCategory.majorCategoryId, param.majorCategoryId),
       ),
     );
 
@@ -78,7 +81,7 @@ export class GlobalRepository {
 
   async findMinerCategoriesByMajorCategoryId(
     conn: DbOrTx,
-    majorCategoryId: bigint,
+    param: { majorCategoryId: bigint },
   ) {
     const { minerCategory } = schema;
 
@@ -86,7 +89,7 @@ export class GlobalRepository {
       .where(
         and(
           eq(minerCategory.isValid, true),
-          eq(minerCategory.majorCategoryId, majorCategoryId),
+          eq(minerCategory.majorCategoryId, param.majorCategoryId),
         ),
       )
       .orderBy(minerCategory.sortKey, minerCategory.minerCategoryId);

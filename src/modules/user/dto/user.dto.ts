@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  IsOptional,
+  Matches,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginRequestDto {
@@ -37,4 +43,33 @@ export class LoginRequestDto {
     example: false,
   })
   isAuto: boolean = false;
+}
+
+export class CheckUserRequestDto {
+  @IsString({
+    message: '아이디 형식이 올바르지 않습니다.',
+  })
+  @IsNotEmpty({
+    message: '아이디를 입력해 주세요.',
+  })
+  @Matches(/^(?=.*[A-Za-z])[A-Za-z0-9]{5,25}$/, {
+    message:
+      '아이디는 5자 이상 25자 이하, 영문 또는 영문, 숫자의 조합이어야 합니다.',
+  })
+  @ApiProperty({
+    description: '사용자 아이디',
+    type: String,
+    example: 'example123',
+  })
+  userName!: string;
+}
+
+export class NativeRegisterRequestDto extends CheckUserRequestDto {
+  constructor() {
+    super();
+  }
+  password!: string;
+  realName!: string;
+  phoneNumber!: string;
+  email!: string;
 }
