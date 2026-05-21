@@ -4,6 +4,7 @@ import {
   MaxLength,
   IsOptional,
   Matches,
+  IsEmail,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -68,8 +69,60 @@ export class NativeRegisterRequestDto extends CheckUserRequestDto {
   constructor() {
     super();
   }
+
+  @IsString({
+    message: '비밀번호 형식이 올바르지 않습니다.',
+  })
+  @IsNotEmpty({
+    message: '비밀번호를 입력해 주세요.',
+  })
+  @Matches(
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}|:;"'<>,.?/~`]).{10,25}$/,
+    {
+      message:
+        '비밀번호는 5자 이상 25자 이하, 영문 또는 영문, 숫자의 조합이어야 합니다.',
+    },
+  )
+  @ApiProperty({
+    description: '사용자 비밀번호',
+    type: String,
+    example: 'password123',
+  })
   password!: string;
+
+  @IsString({
+    message: '이름 형식이 올바르지 않습니다.',
+  })
+  @IsNotEmpty({
+    message: '이름을 입력해 주세요.',
+  })
+  @ApiProperty({
+    description: '사용자 이름',
+    type: String,
+    example: '홍길동',
+  })
   realName!: string;
+
+  @IsString({
+    message: '휴대전화 번호 형식이 올바르지 않습니다.',
+  })
+  @IsNotEmpty({
+    message: '휴대전화 번호을 입력해 주세요.',
+  })
+  @Matches(/^(010|011|016|017|018|019)-\d{3,4}-\d{4}$/, {
+    message: '휴대전화 번호 형식이 올바르지 않습니다.',
+  })
+  @ApiProperty({
+    description: '사용자 휴대전화 번호',
+    example: '010-0000-0000',
+  })
   phoneNumber!: string;
+
+  @IsEmail({}, { message: '이메일 형식이 올바르지 않습니다.' })
+  @IsNotEmpty({
+    message: '이메일을 입력하여주세요.',
+  })
+  @MaxLength(255, { message: '255자를 초과할 수 없습니다.' })
+  @ApiProperty({ description: '사용자 이메일', example: 'user@example.com' })
   email!: string;
 }
