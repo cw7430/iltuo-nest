@@ -11,6 +11,8 @@ import {
   LoginAndRefreshResponseDto,
   RefreshRequestDto,
   LogoutRequestDto,
+  NativeRegisterRequestDto,
+  CheckUserRequestDto,
 } from './dto';
 import { CustomException } from '@/common/api/exception';
 import * as schema from '@/modules/database/schemas';
@@ -28,10 +30,9 @@ export class UserService {
 
   async nativeLogin(reqDto: LoginRequestDto) {
     const signInResult =
-      await this.userRepository.findNativeLoginInfoByUserName(
-        this.db,
-        reqDto.userName,
-      );
+      await this.userRepository.findNativeLoginInfoByUserName(this.db, {
+        userName: reqDto.userName,
+      });
 
     if (!signInResult) {
       throw new CustomException('LOGIN_ERROR');
@@ -52,23 +53,22 @@ export class UserService {
         reqDto.isAuto,
       );
 
-    await this.userRepository.createRefreshToken(
-      this.db,
-      signInResult.userId,
-      tokenResponse.refreshToken,
-      refreshTokenExpiresAt,
-    );
+    await this.userRepository.createRefreshToken(this.db, {
+      userId: signInResult.userId,
+      token: tokenResponse.refreshToken,
+      expiresAt: refreshTokenExpiresAt,
+    });
 
-    const response = {
+    const res = {
       ...tokenResponse,
       authRole: signInResult.authRole,
       authType: signInResult.authType,
       isAuto: reqDto.isAuto,
     };
 
-    this.log.log(`Sign In successfully for user ID: ${signInResult.userId}`);
+    this.log.log(`Login successfully for user ID: ${signInResult.userId}`);
 
-    return plainToInstance(LoginAndRefreshResponseDto, response, {
+    return plainToInstance(LoginAndRefreshResponseDto, res, {
       excludeExtraneousValues: true,
     });
   }
@@ -78,8 +78,10 @@ export class UserService {
 
     const isRefreshTokenIn = await this.userRepository.existsByUserIdAndToken(
       this.db,
-      formalTokenInfo.userId,
-      formalTokenInfo.refreshToken,
+      {
+        userId: formalTokenInfo.userId,
+        token: formalTokenInfo.refreshToken,
+      },
     );
 
     if (!isRefreshTokenIn) {
@@ -88,7 +90,7 @@ export class UserService {
 
     const refreshResult = await this.userRepository.findRefreshInfoByUserId(
       this.db,
-      formalTokenInfo.userId,
+      { userId: formalTokenInfo.userId },
     );
 
     if (!refreshResult) {
@@ -107,16 +109,14 @@ export class UserService {
       );
 
     await this.db.transaction(async (tx) => {
-      await this.userRepository.deleteRefreshTokenByToken(
-        tx,
-        formalTokenInfo.refreshToken,
-      );
-      await this.userRepository.createRefreshToken(
-        tx,
-        formalTokenInfo.userId,
-        tokenResponse.refreshToken,
-        refreshTokenExpiresAt,
-      );
+      await this.userRepository.deleteRefreshTokenByToken(tx, {
+        token: formalTokenInfo.refreshToken,
+      });
+      await this.userRepository.createRefreshToken(tx, {
+        userId: formalTokenInfo.userId,
+        token: tokenResponse.refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+      });
     });
 
     const response = {
@@ -138,9 +138,45 @@ export class UserService {
   async logout(reqDto: LogoutRequestDto) {
     if (!reqDto.refreshToken) return;
 
-    await this.userRepository.deleteRefreshTokenByToken(
-      this.db,
-      reqDto.refreshToken,
-    );
+    await this.userRepository.deleteRefreshTokenByToken(this.db, {
+      token: reqDto.refreshToken,
+    });
+  }
+
+  async checkUser(reqDto: CheckUserRequestDto) {
+    const check = await this.userRepository.existsByUserName(this.db, {
+      userName: reqDto.userName,
+    });
+
+    if (!check) {
+      this.log.warn(`User Name is Duplicated: ${reqDto.userName}`);
+      throw new CustomException('CONFLICT');
+    }
+
+    this.log.log(`User Name is Checked: ${reqDto.userName}`);
+  }
+
+  async nativeRegister(reqDto: NativeRegisterRequestDto) {
+    await this.checkUser(reqDto);
+
+    const passwordHash = await bcrypt.hash(reqDto.password, 10);
+
+    const res = await this.db.transaction(async (tx) => {
+      const [user] = await this.userRepository.createUser(tx, {
+        userName: reqDto.userName,
+        realName: reqDto.realName,
+        phoneNumber: reqDto.phoneNumber,
+        email: reqDto.email,
+        authType: 'NATIVE',
+      });
+      const [nativeUser] = await this.userRepository.createNativeUser(tx, {
+        nativeUserId: user.userId,
+        passwordHash,
+      });
+
+      return { userId: nativeUser.nativeUserId };
+    });
+
+    this.log.log(`Register successfully for user ID: ${res.userId}`);
   }
 }
