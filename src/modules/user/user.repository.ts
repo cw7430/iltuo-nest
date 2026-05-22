@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { sql, eq, ne, and } from 'drizzle-orm';
+import { sql, eq, ne, and, desc, asc } from 'drizzle-orm';
 
 import * as schema from '@/modules/database/schemas';
 import { type DbOrTx } from '@/modules/database/types';
@@ -46,7 +46,28 @@ export class UserRepository {
     return result[0] ?? undefined;
   }
 
-  async existsByUserName(conn: DbOrTx, param: { userName: string }) {
+  async findAdressesByUserID(conn: DbOrTx, param: { userId: bigint }) {
+    const { address } = schema;
+
+    return conn
+      .select()
+      .from(address)
+      .where(and(eq(address.isValid, true), eq(address.userId, param.userId)))
+      .orderBy(desc(address.isMain), asc(address.createdAt));
+  }
+
+  async findMainAddressByUserId(conn: DbOrTx, param: { userId: bigint }) {
+    const { address } = schema;
+
+    const result = await conn
+      .select()
+      .from(address)
+      .where(and(eq(address.isMain, true), eq(address.userId, param.userId)));
+
+    return result[0] ?? undefined;
+  }
+
+  async existsUserByUserName(conn: DbOrTx, param: { userName: string }) {
     const { user } = schema;
 
     const [row] = await conn
@@ -64,7 +85,7 @@ export class UserRepository {
     return !!row;
   }
 
-  async existsByUserIdAndToken(
+  async existsUserByUserIdAndToken(
     conn: DbOrTx,
     param: { userId: bigint; token: string },
   ) {
@@ -84,23 +105,40 @@ export class UserRepository {
     return !!row;
   }
 
+  async existsAddressByUserIdAndIsMain(
+    conn: DbOrTx,
+    param: { userId: bigint },
+  ) {
+    const { address } = schema;
+
+    const [row] = await conn
+      .select({ exists: sql<boolean>`true` })
+      .from(address)
+      .where(
+        and(
+          eq(address.userId, param.userId),
+          eq(address.isMain, true),
+          eq(address.isValid, true),
+        ),
+      )
+      .limit(1);
+
+    return !!row;
+  }
+
   async createRefreshToken(
     conn: DbOrTx,
-    param: { userId: bigint; token: string; expiresAt: Date },
+    data: { userId: bigint; token: string; expiresAt: Date },
   ) {
-    const { refreshToken } = schema;
-
-    const { userId, token, expiresAt } = param;
-
     return conn
-      .insert(refreshToken)
-      .values({ userId, token, expiresAt })
-      .returning({ refreshTokenId: refreshToken.refreshTokenId });
+      .insert(schema.refreshToken)
+      .values(data)
+      .returning({ refreshTokenId: schema.refreshToken.refreshTokenId });
   }
 
   async createUser(
     conn: DbOrTx,
-    param: {
+    data: {
       userName: string;
       realName: string;
       phoneNumber: string;
@@ -108,40 +146,85 @@ export class UserRepository {
       authType: 'NATIVE' | 'SOCIAL' | 'CROSS';
     },
   ) {
-    const { user } = schema;
-
-    const { userName, realName, phoneNumber, email, authType } = param;
-
     return conn
-      .insert(user)
+      .insert(schema.user)
       .values({
-        userName,
-        realName,
-        phoneNumber,
-        email,
-        authType,
+        ...data,
         authRole: 'USER',
       })
-      .returning({ userId: user.userId });
+      .returning({ userId: schema.user.userId });
   }
 
   async createNativeUser(
     conn: DbOrTx,
-    param: { nativeUserId: bigint; passwordHash: string },
+    data: { nativeUserId: bigint; passwordHash: string },
   ) {
-    const { nativeUser } = schema;
-
-    const { nativeUserId, passwordHash } = param;
-
     return conn
-      .insert(nativeUser)
-      .values({ nativeUserId, passwordHash })
-      .returning({ nativeUserId: nativeUser.nativeUserId });
+      .insert(schema.nativeUser)
+      .values(data)
+      .returning({ nativeUserId: schema.nativeUser.nativeUserId });
+  }
+
+  async createAddress(
+    conn: DbOrTx,
+    data: {
+      userId: bigint;
+      postalCode: string;
+      defaultAddress: string;
+      detailAddress: string;
+      extraAddress: string;
+      isMain: boolean;
+      isValid: boolean;
+    },
+  ) {
+    return conn
+      .insert(schema.address)
+      .values(data)
+      .returning({ addressId: schema.address.addressId });
+  }
+
+  async updateAddress(
+    conn: DbOrTx,
+    data: {
+      postalCode: string;
+      defaultAddress: string;
+      detailAddress: string;
+      extraAddress: string;
+    },
+    param: { addressId: bigint },
+  ) {
+    return conn
+      .update(schema.address)
+      .set(data)
+      .where(eq(schema.address.addressId, param.addressId))
+      .returning({ addressId: schema.address.addressId });
+  }
+
+  async updateMainAddress(
+    conn: DbOrTx,
+    data: {
+      isMain: boolean;
+    },
+    param: { addressId: bigint },
+  ) {
+    return conn
+      .update(schema.address)
+      .set(data)
+      .where(eq(schema.address.addressId, param.addressId))
+      .returning({ addressId: schema.address.addressId });
+  }
+
+  async invalidateAddress(conn: DbOrTx, param: { addressId: bigint }) {
+    return conn
+      .update(schema.address)
+      .set({ isMain: false, isValid: false, deletedAt: new Date() })
+      .where(eq(schema.address.addressId, param.addressId))
+      .returning({ addressId: schema.address.addressId });
   }
 
   async deleteRefreshTokenByToken(conn: DbOrTx, param: { token: string }) {
-    const { refreshToken } = schema;
-
-    return conn.delete(refreshToken).where(eq(refreshToken.token, param.token));
+    return conn
+      .delete(schema.refreshToken)
+      .where(eq(schema.refreshToken.token, param.token));
   }
 }

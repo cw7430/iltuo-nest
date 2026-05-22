@@ -281,7 +281,7 @@ export class ProductRepository {
 
   async createProduct(
     conn: DbOrTx,
-    param: {
+    data: {
       minerCategoryId: bigint;
       productName: string;
       productComments: string | null;
@@ -291,29 +291,15 @@ export class ProductRepository {
   ) {
     const { product } = schema;
 
-    const {
-      minerCategoryId,
-      productName,
-      productComments,
-      price,
-      discountedRate,
-    } = param;
-
     return conn
       .insert(product)
-      .values({
-        minerCategoryId,
-        productName,
-        productComments,
-        price,
-        discountedRate,
-      })
+      .values(data)
       .returning({ productId: product.productId });
   }
 
   async createProductImage(
     conn: DbOrTx,
-    param: {
+    data: {
       productImageId: bigint;
       fileName: string;
       originalName: string;
@@ -323,12 +309,9 @@ export class ProductRepository {
   ) {
     const { productImage } = schema;
 
-    const { productImageId, fileName, originalName, mimeType, fileSize } =
-      param;
-
     return conn
       .insert(productImage)
-      .values({ productImageId, fileName, originalName, mimeType, fileSize })
+      .values(data)
       .returning({ productImageId: productImage.productImageId });
   }
 }
