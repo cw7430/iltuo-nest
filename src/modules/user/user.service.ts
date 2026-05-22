@@ -76,7 +76,7 @@ export class UserService {
   async refresh(req: FastifyRequest, reqDto: RefreshRequestDto) {
     const formalTokenInfo = await this.authUtil.getFormalRefreshInfo(req);
 
-    const isRefreshTokenIn = await this.userRepository.existsByUserIdAndToken(
+    const isRefreshTokenIn = await this.userRepository.existsUserByUserIdAndToken(
       this.db,
       {
         userId: formalTokenInfo.userId,
@@ -144,7 +144,7 @@ export class UserService {
   }
 
   async checkUser(reqDto: CheckUserRequestDto) {
-    const check = await this.userRepository.existsByUserName(this.db, {
+    const check = await this.userRepository.existsUserByUserName(this.db, {
       userName: reqDto.userName,
     });
 
