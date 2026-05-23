@@ -37,7 +37,7 @@ class DetailOptionResponseDto {
     type: String,
     example: '110',
   })
-  optionValue!: string;
+  optionValue!: bigint;
 
   @Expose()
   @ApiProperty({ description: '유효성 여부', type: String, example: true })
