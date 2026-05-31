@@ -6,6 +6,17 @@ import { type DbOrTx } from '@/modules/database/types';
 
 @Injectable()
 export class UserRepository {
+  async findUserById(conn: DbOrTx, param: { userId: bigint }) {
+    const { user } = schema;
+    const result = await conn
+      .select()
+      .from(user)
+      .where(and(eq(user.userId, param.userId), ne(user.authRole, 'LEFT')))
+      .limit(1);
+
+    return result[0] ?? undefined;
+  }
+
   async findNativeLoginInfoByUserName(
     conn: DbOrTx,
     param: { userName: string },
