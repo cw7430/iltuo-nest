@@ -118,7 +118,7 @@ export class UserService {
       });
     });
 
-    const response = {
+    const res = {
       ...tokenResponse,
       authRole: refreshResult.authRole,
       authType: refreshResult.authType,
@@ -129,7 +129,7 @@ export class UserService {
       `Refresh Token successfully for user ID: ${formalTokenInfo.userId}`,
     );
 
-    return plainToInstance(LoginAndRefreshResponseDto, response, {
+    return plainToInstance(LoginAndRefreshResponseDto, res, {
       excludeExtraneousValues: true,
     });
   }
@@ -160,7 +160,7 @@ export class UserService {
 
     const passwordHash = await bcrypt.hash(reqDto.password, 10);
 
-    const res = await this.db.transaction(async (tx) => {
+    const register = await this.db.transaction(async (tx) => {
       const [user] = await this.userRepository.createUser(tx, {
         userName: reqDto.userName,
         realName: reqDto.realName,
@@ -173,10 +173,42 @@ export class UserService {
         passwordHash,
       });
 
-      return { userId: nativeUser.nativeUserId };
+      return {
+        userId: nativeUser.nativeUserId,
+        authType: user.authType,
+        authRole: user.authRole,
+      };
     });
 
-    this.log.log(`Register successfully for user ID: ${res.userId}`);
+    if (register.authRole === 'LEFT') {
+      throw new CustomException('INTERNAL_SERVER_ERROR');
+    }
+
+    const { tokenResponse, refreshTokenExpiresAt } =
+      await this.authUtil.issueTokens(
+        register.userId,
+        register.authRole,
+        false,
+      );
+
+    await this.userRepository.createRefreshToken(this.db, {
+      userId: register.userId,
+      token: tokenResponse.refreshToken,
+      expiresAt: refreshTokenExpiresAt,
+    });
+
+    const res = {
+      ...tokenResponse,
+      authRole: register.authRole,
+      authType: register.authType,
+      isAuto: false,
+    };
+
+    this.log.log(`Register successfully for user ID: ${register.userId}`);
+
+    return plainToInstance(LoginAndRefreshResponseDto, res, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async getUser(userId: bigint) {
