@@ -163,7 +163,11 @@ export class UserRepository {
         ...data,
         authRole: 'USER',
       })
-      .returning({ userId: schema.user.userId });
+      .returning({
+        userId: schema.user.userId,
+        authType: schema.user.authType,
+        authRole: schema.user.authRole,
+      });
   }
 
   async createNativeUser(
