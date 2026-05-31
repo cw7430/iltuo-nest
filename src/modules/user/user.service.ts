@@ -13,6 +13,7 @@ import {
   LogoutRequestDto,
   NativeRegisterRequestDto,
   CheckUserRequestDto,
+  UserResponseDto,
 } from './dto';
 import { CustomException } from '@/common/api/exception';
 import * as schema from '@/modules/database/schemas';
@@ -76,13 +77,11 @@ export class UserService {
   async refresh(req: FastifyRequest, reqDto: RefreshRequestDto) {
     const formalTokenInfo = await this.authUtil.getFormalRefreshInfo(req);
 
-    const isRefreshTokenIn = await this.userRepository.existsUserByUserIdAndToken(
-      this.db,
-      {
+    const isRefreshTokenIn =
+      await this.userRepository.existsUserByUserIdAndToken(this.db, {
         userId: formalTokenInfo.userId,
         token: formalTokenInfo.refreshToken,
-      },
-    );
+      });
 
     if (!isRefreshTokenIn) {
       throw new CustomException('UNAUTHORIZED');
@@ -178,5 +177,17 @@ export class UserService {
     });
 
     this.log.log(`Register successfully for user ID: ${res.userId}`);
+  }
+
+  async getUser(userId: bigint) {
+    const res = await this.userRepository.findUserById(this.db, { userId });
+
+    if (!res) {
+      throw new CustomException('UNAUTHORIZED');
+    }
+
+    return plainToInstance(UserResponseDto, res, {
+      excludeExtraneousValues: true,
+    });
   }
 }

@@ -7,6 +7,9 @@ import {
   IsEmail,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
+
+import { TransformBigintToString } from '@/common/decorator';
 
 export class LoginRequestDto {
   @IsString({
@@ -125,4 +128,68 @@ export class NativeRegisterRequestDto extends CheckUserRequestDto {
   @MaxLength(255, { message: '255자를 초과할 수 없습니다.' })
   @ApiProperty({ description: '사용자 이메일', example: 'user@example.com' })
   email!: string;
+}
+
+export class UserResponseDto {
+  @Expose()
+  @TransformBigintToString()
+  @ApiProperty({
+    description: '회원 일련번호',
+    type: String,
+    example: '1',
+  })
+  userId!: bigint;
+
+  @Expose()
+  @ApiProperty({
+    description: '사용자 아이디',
+    type: String,
+    example: 'example123',
+  })
+  userName!: string;
+
+  @Expose()
+  @ApiProperty({
+    description: '사용자 이름',
+    type: String,
+    example: '홍길동',
+    nullable: true,
+  })
+  realName!: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: '사용자 휴대전화 번호',
+    example: '010-0000-0000',
+    nullable: true,
+  })
+  phoneNumber!: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: '사용자 이메일',
+    example: 'user@example.com',
+    nullable: true,
+  })
+  email!: string | null;
+
+  @Expose()
+  @ApiProperty({ description: '권한', type: String, example: 'USER' })
+  authRole!: 'USER' | 'ADMIN';
+
+  @Expose()
+  @ApiProperty({ description: '로그인 방식', type: String, example: 'NATIVE' })
+  authType!: 'NATIVE' | 'SOCIAL';
+
+  @Expose()
+  @ApiProperty({ description: '생성일', type: Date })
+  createdAt!: Date;
+
+  @Expose()
+  @ApiProperty({ description: '수정일', type: Date })
+  updatedAt!: Date;
+
+  @Expose()
+  @ApiProperty({ description: '삭제일', type: Date, nullable: true })
+  deletedAt!: Date | null;
 }

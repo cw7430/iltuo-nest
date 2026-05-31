@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -12,7 +12,9 @@ import {
   LogoutRequestDto,
   CheckUserRequestDto,
   NativeRegisterRequestDto,
+  UserResponseDto,
 } from './dto';
+import { CurrentUser } from '@/modules/auth/decorator';
 
 @Controller('/api/v1/user')
 @ApiTags('user')
@@ -60,5 +62,11 @@ export class UserController {
   async nativeRegister(reqDto: NativeRegisterRequestDto) {
     await this.userService.nativeRegister(reqDto);
     return SuccessResponseDto.ok();
+  }
+
+  @Get()
+  @ApiSuccessResponse(UserResponseDto)
+  async getUser(@CurrentUser('userId') userId: bigint) {
+    return SuccessResponseDto.okWith(await this.userService.getUser(userId));
   }
 }
