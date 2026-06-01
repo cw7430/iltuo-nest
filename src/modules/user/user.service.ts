@@ -149,7 +149,7 @@ export class UserService {
 
     if (!check) {
       this.log.warn(`User Name is Duplicated: ${reqDto.userName}`);
-      throw new CustomException('CONFLICT');
+      throw new CustomException('DUPLICATE_RESOURCE');
     }
 
     this.log.log(`User Name is Checked: ${reqDto.userName}`);
