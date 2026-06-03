@@ -59,7 +59,7 @@ export class UserController {
   @Post('/register/native')
   @ApiBody({ type: NativeRegisterRequestDto })
   @ApiSuccessResponse(LoginAndRefreshResponseDto)
-  async nativeRegister(reqDto: NativeRegisterRequestDto) {
+  async nativeRegister(@Body() reqDto: NativeRegisterRequestDto) {
     return SuccessResponseDto.okWith(
       await this.userService.nativeRegister(reqDto),
     );
