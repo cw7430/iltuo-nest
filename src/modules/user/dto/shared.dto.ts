@@ -24,7 +24,7 @@ export class LoginAndRefreshResponseDto {
 
   @Expose()
   @ApiProperty({ description: '로그인 방식', type: String, example: 'NATIVE' })
-  authType!: 'NATIVE' | 'SOCIAL';
+  authType!: 'NATIVE' | 'SOCIAL' | 'CROSS';
 
   @Expose()
   @ApiProperty({

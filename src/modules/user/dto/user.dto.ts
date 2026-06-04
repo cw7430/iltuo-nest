@@ -179,7 +179,7 @@ export class UserResponseDto {
 
   @Expose()
   @ApiProperty({ description: '로그인 방식', type: String, example: 'NATIVE' })
-  authType!: 'NATIVE' | 'SOCIAL';
+  authType!: 'NATIVE' | 'SOCIAL' | 'CROSS';
 
   @Expose()
   @ApiProperty({ description: '생성일', type: Date })
