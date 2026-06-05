@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, UseGuards } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -15,6 +15,7 @@ import {
   UserResponseDto,
 } from './dto';
 import { CurrentUser } from '@/modules/auth/decorator';
+import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 
 @Controller('/api/v1/user')
 @ApiTags('user')
@@ -66,6 +67,8 @@ export class UserController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
   @ApiSuccessResponse(UserResponseDto)
   async getUser(@CurrentUser('userId') userId: bigint) {
     return SuccessResponseDto.okWith(await this.userService.getUser(userId));
