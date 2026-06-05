@@ -27,7 +27,7 @@ export class JwtUtil {
   /**
    * Token 추출
    */
-  extractToken(request: FastifyRequest): string {
+  extractToken(request: FastifyRequest) {
     const header = request.headers.authorization;
 
     if (!header) {
