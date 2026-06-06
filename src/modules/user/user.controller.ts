@@ -1,6 +1,15 @@
-import { Controller, Post, Body, Req, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  Get,
+  UseGuards,
+  Patch,
+  Param,
+} from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
-import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBody, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
 import { UserService } from './user.service';
 import { ApiSuccessResponse } from '@/common/decorator';
@@ -13,6 +22,8 @@ import {
   CheckUserRequestDto,
   NativeRegisterRequestDto,
   UserResponseDto,
+  AddressResponseDto,
+  AddressRequestDto,
 } from './dto';
 import { CurrentUser } from '@/modules/auth/decorator';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
@@ -72,5 +83,78 @@ export class UserController {
   @ApiSuccessResponse(UserResponseDto)
   async getUser(@CurrentUser('userId') userId: bigint) {
     return SuccessResponseDto.okWith(await this.userService.getUser(userId));
+  }
+
+  @Get('/address')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiSuccessResponse(AddressResponseDto)
+  async getAddress(@CurrentUser('userId') userId: bigint) {
+    return SuccessResponseDto.okWith(await this.userService.getAddress(userId));
+  }
+
+  @Post('/address')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiBody({ type: AddressRequestDto })
+  @ApiSuccessResponse()
+  async createAddress(
+    @CurrentUser('userId') userId: bigint,
+    @Body() reqDto: AddressRequestDto,
+  ) {
+    await this.userService.createAddress(userId, reqDto);
+    return SuccessResponseDto.ok();
+  }
+
+  @Patch('/address/:addressId')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiBody({ type: AddressRequestDto })
+  @ApiParam({
+    name: 'addressId',
+    description: '주소 일련번호',
+    type: 'string',
+    example: 1,
+  })
+  @ApiSuccessResponse()
+  async updateAddress(
+    @Param('addressId') addressId: bigint,
+    @Body() reqDto: AddressRequestDto,
+  ) {
+    await this.userService.updateAddress(addressId, reqDto);
+    return SuccessResponseDto.ok();
+  }
+
+  @Patch('/address/main/:addressId')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiParam({
+    name: 'addressId',
+    description: '주소 일련번호',
+    type: 'string',
+    example: 1,
+  })
+  @ApiSuccessResponse()
+  async updateMainAddress(
+    @Param('addressId') addressId: bigint,
+    @CurrentUser('userId') userId: bigint,
+  ) {
+    await this.userService.updateMainAddress(addressId, userId);
+    return SuccessResponseDto.ok();
+  }
+
+  @Patch('/address/invalidate/:addressId')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiParam({
+    name: 'addressId',
+    description: '주소 일련번호',
+    type: 'string',
+    example: 1,
+  })
+  @ApiSuccessResponse()
+  async invalidateAddress(@Param('addressId') addressId: bigint) {
+    await this.userService.invalidateAddress(addressId);
+    return SuccessResponseDto.ok();
   }
 }

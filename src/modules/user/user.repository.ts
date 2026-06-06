@@ -186,16 +186,15 @@ export class UserRepository {
       userId: bigint;
       postalCode: string;
       defaultAddress: string;
-      detailAddress: string;
-      extraAddress: string;
+      detailAddress: string | null;
+      extraAddress: string | null;
       isMain: boolean;
-      isValid: boolean;
     },
   ) {
-    return conn
-      .insert(schema.address)
-      .values(data)
-      .returning({ addressId: schema.address.addressId });
+    return conn.insert(schema.address).values(data).returning({
+      addressId: schema.address.addressId,
+      userId: schema.address.userId,
+    });
   }
 
   async updateAddress(
@@ -203,8 +202,8 @@ export class UserRepository {
     data: {
       postalCode: string;
       defaultAddress: string;
-      detailAddress: string;
-      extraAddress: string;
+      detailAddress: string | null;
+      extraAddress: string | null;
     },
     param: { addressId: bigint },
   ) {
@@ -212,7 +211,10 @@ export class UserRepository {
       .update(schema.address)
       .set(data)
       .where(eq(schema.address.addressId, param.addressId))
-      .returning({ addressId: schema.address.addressId });
+      .returning({
+        addressId: schema.address.addressId,
+        userId: schema.address.userId,
+      });
   }
 
   async updateMainAddress(
@@ -226,7 +228,10 @@ export class UserRepository {
       .update(schema.address)
       .set(data)
       .where(eq(schema.address.addressId, param.addressId))
-      .returning({ addressId: schema.address.addressId });
+      .returning({
+        addressId: schema.address.addressId,
+        userId: schema.address.userId,
+      });
   }
 
   async invalidateAddress(conn: DbOrTx, param: { addressId: bigint }) {
@@ -234,7 +239,10 @@ export class UserRepository {
       .update(schema.address)
       .set({ isMain: false, isValid: false, deletedAt: new Date() })
       .where(eq(schema.address.addressId, param.addressId))
-      .returning({ addressId: schema.address.addressId });
+      .returning({
+        addressId: schema.address.addressId,
+        userId: schema.address.userId,
+      });
   }
 
   async deleteRefreshTokenByToken(conn: DbOrTx, param: { token: string }) {

@@ -14,6 +14,8 @@ import {
   NativeRegisterRequestDto,
   CheckUserRequestDto,
   UserResponseDto,
+  AddressResponseDto,
+  AddressRequestDto,
 } from './dto';
 import { CustomException } from '@/common/api/exception';
 import * as schema from '@/modules/database/schemas';
@@ -221,5 +223,93 @@ export class UserService {
     return plainToInstance(UserResponseDto, res, {
       excludeExtraneousValues: true,
     });
+  }
+
+  async getAddress(userId: bigint) {
+    const res = await this.userRepository.findAdressesByUserID(this.db, {
+      userId,
+    });
+
+    return plainToInstance(AddressResponseDto, res, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async createAddress(userId: bigint, reqDto: AddressRequestDto) {
+    const { postalCode, defaultAddress, detailAddress, extraAddress } = reqDto;
+
+    const res = await this.db.transaction(async (tx) => {
+      const isExist = await this.userRepository.existsAddressByUserIdAndIsMain(
+        tx,
+        { userId },
+      );
+
+      const isMain = isExist ? false : true;
+
+      const [result] = await this.userRepository.createAddress(tx, {
+        userId,
+        postalCode,
+        defaultAddress,
+        detailAddress,
+        extraAddress,
+        isMain,
+      });
+
+      return result;
+    });
+
+    this.log.log(
+      `Create Address successfully for Address ID: ${res.addressId}, User ID: ${res.userId}`,
+    );
+  }
+
+  async updateAddress(addressId: bigint, reqDto: AddressRequestDto) {
+    const { postalCode, defaultAddress, detailAddress, extraAddress } = reqDto;
+
+    const [res] = await this.userRepository.updateAddress(
+      this.db,
+      { postalCode, defaultAddress, detailAddress, extraAddress },
+      { addressId },
+    );
+
+    this.log.log(
+      `Update Address successfully for Address ID: ${res.addressId}, User ID: ${res.userId}`,
+    );
+  }
+
+  async updateMainAddress(addressId: bigint, userId: bigint) {
+    const res = await this.db.transaction(async (tx) => {
+      const formalMainAddress =
+        await this.userRepository.findMainAddressByUserId(tx, { userId });
+
+      if (formalMainAddress) {
+        await this.userRepository.updateMainAddress(
+          tx,
+          { isMain: false },
+          { addressId: formalMainAddress.addressId },
+        );
+      }
+
+      const [result] = await this.userRepository.updateMainAddress(
+        tx,
+        { isMain: true },
+        { addressId },
+      );
+
+      return result;
+    });
+
+    this.log.log(
+      `Update Main Address successfully for Address ID: ${res.addressId}, User ID: ${res.userId}`,
+    );
+  }
+
+  async invalidateAddress(addressId: bigint) {
+    const [res] = await this.userRepository.invalidateAddress(this.db, {
+      addressId,
+    });
+    this.log.log(
+      `Invalidate Address successfully for Address ID: ${res.addressId}, User ID: ${res.userId}`,
+    );
   }
 }
